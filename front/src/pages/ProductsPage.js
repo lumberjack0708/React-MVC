@@ -288,14 +288,21 @@ function ProductsPage() {
                 ]}
               >
                 <Card.Meta
-                  title={<Title level={4} style={{ minHeight: '56px'}}>{product.name || '未命名產品'}</Title>}
+                  title={
+                    <Title level={4} style={{ minHeight: '56px' }}>
+                      {product.name || '未命名產品'}
+                    </Title>
+                  }
                   description={
-                    <Statistic 
-                      value={product.price} 
-                      prefix="NT$"
-                      precision={2}
-                      valueStyle={{ color: '#2B2118', fontSize: '18px' }}
-                    />
+                    <Space direction="vertical" size="small">
+                      <Statistic
+                        value={product.price}
+                        prefix="NT$"
+                        precision={2}
+                        valueStyle={{ color: '#2B2118', fontSize: '18px' }}
+                      />
+                      <Text type="secondary">庫存 {product.stock} 件</Text>
+                    </Space>
                   }
                 />
               </Card>

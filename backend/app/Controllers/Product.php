@@ -30,9 +30,20 @@ class Product extends Controller
         $price = $_POST['price'];
         $stock = $_POST['stock'];
         $category = $_POST['category'];
+        $imageUrl = null;
 
-        // 直接回傳模型的結果，不處理錯誤
-        return $this->pm->newProduct($p_name, $price, $stock, $category);
+        // 處理圖片上傳
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../public/uploads/products/';
+            $fileName = uniqid() . '-' . basename($_FILES['image']['name']);
+            $uploadFile = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
+                $imageUrl = 'uploads/products/' . $fileName;
+            }
+        }
+
+        return $this->pm->newProduct($p_name, $price, $stock, $category, $imageUrl);
     }
     
     public function removeProduct(){
@@ -46,9 +57,20 @@ class Product extends Controller
         $price = $_POST['price'];
         $stock = $_POST['stock'];
         $category = $_POST['category'];
+        $imageUrl = null;
 
-        // 直接回傳模型的結果，不處理錯誤
-        return $this->pm->updateProduct($pid, $p_name, $price, $stock, $category);
+        // 處理圖片上傳
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../public/uploads/products/';
+            $fileName = uniqid() . '-' . basename($_FILES['image']['name']);
+            $uploadFile = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
+                $imageUrl = 'uploads/products/' . $fileName;
+            }
+        }
+
+        return $this->pm->updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl);
     }
 }
 ?>

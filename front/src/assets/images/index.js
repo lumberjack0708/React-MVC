@@ -3,6 +3,8 @@
  *              根據類別與名稱取得對應圖片路徑。
  */
 
+import placeholder from './placeholder.png';
+
 // --- 食品類圖片 (Food) ---
 import dogFood from './food/dogFood.jpg';
 import dogBoneClean10pack from './food/dog-bone-clean.jpg';
@@ -97,8 +99,6 @@ export const getProductImage = (category, productNameFromAPI) => {
     }
   }
   
-  // 當圖片未找到時，回傳一個預設圖片路徑
-  return '/placeholder.png';
+  // 當圖片未找到時，回傳一個本地的預設圖片路徑
+  return placeholder;
 };
-
-export default images;

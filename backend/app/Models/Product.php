@@ -15,7 +15,7 @@
             return DB::select($sql, $arg);
         }
         
-        public function newProduct($p_name, $price, $stock, $category){
+        public function newProduct($p_name, $price, $stock, $category, $imageUrl){
             // 檢查必填欄位
             if(empty($p_name)) {
                 return array('status' => 400, 'message' => "產品名稱不可為空");
@@ -39,8 +39,8 @@
             }
             
             // 如果不存在同名產品，則進行新增
-            $sql = "INSERT INTO `product` (`name`, `price`, `stock`, `category`) VALUES (?, ?, ?, ?)";
-            return DB::insert($sql, array($p_name, $price, $stock, $category));
+            $sql = "INSERT INTO `product` (`name`, `price`, `stock`, `category`, `image_url`) VALUES (?, ?, ?, ?, ?)";
+            return DB::insert($sql, array($p_name, $price, $stock, $category, $imageUrl));
         }
         
         public function removeProduct($pid){
@@ -48,7 +48,7 @@
             return DB::delete($sql, array($pid));
         }
         
-        public function updateProduct($pid, $p_name, $price, $stock, $category){
+        public function updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl){
             // 檢查必填欄位
             if(empty($p_name)) {
                 return array('status' => 400, 'message' => "產品名稱不可為空");
@@ -71,9 +71,19 @@
                 return array('status' => 409, 'message' => "產品名稱「" . $p_name . "」已經存在");
             }
             
+            // 根據是否有新的 imageUrl 來決定 SQL 語句
+            if ($imageUrl !== null) {
+                // 如果有新圖片，則更新 image_url 欄位
+                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=?, `image_url`=? WHERE `product_id`=?";
+                $params = array($p_name, $price, $stock, $category, $imageUrl, $pid);
+            } else {
+                // 如果沒有新圖片，則不更新 image_url 欄位
+                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=? WHERE `product_id`=?";
+                $params = array($p_name, $price, $stock, $category, $pid);
+            }
+            
             // 如果通過所有檢查，則進行更新
-            $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=? WHERE `product_id`=?";
-            return DB::update($sql, array($p_name, $price, $stock, $category, $pid));
+            return DB::update($sql, $params);
         }
     }
 ?>

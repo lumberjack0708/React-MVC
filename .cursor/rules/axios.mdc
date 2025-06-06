@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Please use global axios and qs for calls between front-end and back-end

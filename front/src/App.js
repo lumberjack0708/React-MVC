@@ -8,11 +8,15 @@ import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+// 匯入店家管理頁面
+import StoreLayout from './pages/Store/StoreLayout';
+import ProductManagement from './pages/Store/ProductManagement';
+import OrderManagement from './pages/Store/OrderManagement';
 // 匯入通知相關的 Provider
 import { NotificationProvider } from './components/Notification';
 // 匯入 Ant Design 元件
-import { Layout, Menu, Badge, theme, Button } from 'antd';
-import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Menu, Badge, theme, Button, App as AntApp } from 'antd';
+import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, ShopOutlined } from '@ant-design/icons';
 // 匯入 Redux 相關函數和選擇器
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from './store/cartSlice';
@@ -38,8 +42,9 @@ function AppContent() {
     // 根據當前 URL 路徑設置選中的菜單項
     const path = window.location.pathname;
     if (path === '/') setCurrent('home');
-    else if (path === '/products') setCurrent('products');
-    else if (path === '/cart') setCurrent('cart');
+    else if (path.includes('/products')) setCurrent('products');
+    else if (path.includes('/cart')) setCurrent('cart');
+    else if (path.includes('/store')) setCurrent('store');
   }, []);
 
   const menuItems = [
@@ -61,6 +66,11 @@ function AppContent() {
         </Badge>
       ),
       label: <Link to="/cart">購物車</Link>,
+    },
+    {
+      key: 'store',
+      icon: <ShopOutlined />,
+      label: <Link to="/store/products">店家管理</Link>,
     },
   ];
 
@@ -130,6 +140,11 @@ function AppContent() {
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/user-profile" element={<UserProfilePage />} />
+            {/* 店家管理路由 */}
+            <Route path="/store" element={<StoreLayout />}>
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="orders" element={<OrderManagement />} />
+            </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
@@ -147,7 +162,9 @@ function App() {
   return (
     // 全域通知
     <NotificationProvider>
-      <AppContent />
+      <AntApp> {/* Ant Design v5 App Wrapper */}
+        <AppContent />
+      </AntApp>
     </NotificationProvider>
   );
 }

@@ -27,7 +27,11 @@ class Order extends Controller
     }
 
     public function getOrderDetail(){
-        return $this->om->getOrderDetail();
+        if (!isset($_POST['order_id'])) {
+            return array('status' => 400, 'message' => '缺少必要參數：order_id');
+        }
+        $orderId = $_POST['order_id'];
+        return $this->om->getOrderDetail($orderId);
     }
     
     public function newOrder(){

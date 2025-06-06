@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
-import { getApiUrl } from '../config';
+import { getApiUrl, API_CONFIG } from '../config';
 import { useNotification } from '../components/Notification';
 import ProductDetailModal from '../components/ProductDetailModal';
 // 引入 Ant Design 元件
-import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Divider, Radio, Tooltip, Spin } from 'antd';
+import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Divider, Radio, Tooltip, Spin, message } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined, FilterOutlined, SortAscendingOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 // 引入保留的 Emotion 樣式組件
 import { Container, Heading, ProductImage as StyledProductImage } from '../styles/styles';
@@ -15,6 +15,7 @@ import { getProductImage } from '../assets/images/index';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { Meta } = Card;
 
 /**
  * @function ProductsPage
@@ -40,31 +41,6 @@ function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
   
-  // 處理頁面滾動時固定排序按鈕的問題
-  useEffect(() => {
-    const handleScroll = () => {
-      // 當頁面滾動時，強制更新按鈕組的狀態
-      const radioButtons = document.querySelectorAll('.ant-radio-button-wrapper-checked');
-      radioButtons.forEach(button => {
-        // 移除並重新添加選中狀態，確保按鈕不會保持選中狀態
-        if (button.classList.contains('ant-radio-button-wrapper-checked')) {
-          button.classList.remove('ant-radio-button-wrapper-checked');
-          setTimeout(() => {
-            button.classList.add('ant-radio-button-wrapper-checked');
-          }, 0);
-        }
-      });
-    };
-
-    // 添加滾動事件監聽器
-    window.addEventListener('scroll', handleScroll);
-    
-    // 清理函數，組件卸載時移除事件監聽器
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-  
   // 從後端 API 獲取產品數據
   useEffect(() => {
     const loadProducts = async () => {
@@ -79,6 +55,7 @@ function ProductsPage() {
             price: parseFloat(p.price),
             category: p.category,
             stock: parseInt(p.stock, 10),
+            image_url: p.image_url,
           }));
           setProducts(formattedProducts);
         } else {
@@ -140,18 +117,6 @@ function ProductsPage() {
   // 處理排序改變
   const handleSortChange = (e) => {
     setSortOrder(e.target.value);
-    // 延遲處理以確保 DOM 已更新
-    setTimeout(() => {
-      // 修復選中狀態顯示問題
-      const checkedButton = document.querySelector(`.ant-radio-button-wrapper[data-value="${e.target.value}"]`);
-      if (checkedButton) {
-        const allButtons = document.querySelectorAll('.ant-radio-button-wrapper');
-        allButtons.forEach(btn => {
-          btn.classList.remove('ant-radio-button-wrapper-checked');
-        });
-        checkedButton.classList.add('ant-radio-button-wrapper-checked');
-      }
-    }, 0);
   };
   
   // 篩選產品
@@ -216,15 +181,12 @@ function ProductsPage() {
                 onChange={handleSortChange}
                 optionType="button"
                 buttonStyle="solid"
-                size="middle"
-                style={{ whiteSpace: 'nowrap' }}
-                className="sort-radio-group"
-                destroyInactiveOptions={true}
-              >
-                <Radio.Button value="default" className="sort-radio-button" data-value="default">預設</Radio.Button>
-                <Radio.Button value="price-asc" className="sort-radio-button" data-value="price-asc">價格↑</Radio.Button>
-                <Radio.Button value="price-desc" className="sort-radio-button" data-value="price-desc">價格↓</Radio.Button>
-              </Radio.Group>
+                options={[
+                  { label: '預設', value: 'default' },
+                  { label: '價格↑', value: 'price-asc' },
+                  { label: '價格↓', value: 'price-desc' },
+                ]}
+              />
             </Space>
           </Col>
           
@@ -264,24 +226,30 @@ function ProductsPage() {
               <Card
                 hoverable
                 cover={
-                  <StyledProductImage 
-                    src={getProductImage(product.category, product.name) || '/placeholder.png'} 
-                    alt={product.name || '產品圖片'}
-                    style={{ height: 200, objectFit: 'contain', padding: '10px' }}
-                  />
+                  <div style={{ height: 220, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                    <img
+                      alt={product.name}
+                      src={
+                        product.image_url
+                          ? `${API_CONFIG.assetBaseURL}public/${product.image_url}`
+                          : getProductImage(product.category, product.name)
+                      }
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
                 }
                 actions={[
                   <Button 
                     type="text" 
                     icon={<EyeOutlined />}
-                    onClick={() => handleViewDetails(product.id)}
+                    onClick={() => handleViewDetails(product.id)} 
                   >
                     查看詳情
                   </Button>,
                   <Button 
                     type="text" 
                     icon={<ShoppingCartOutlined />}
-                    onClick={() => handleAddToCart(product)}
+                    onClick={() => handleAddToCart(product)} 
                   >
                     加入購物車
                   </Button>

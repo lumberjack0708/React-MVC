@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2025-06-06 11:10:18
+-- 產生時間： 2025-06-06 16:48:17
 -- 伺服器版本： 10.4.32-MariaDB
 -- PHP 版本： 8.2.12
 
@@ -33,17 +33,19 @@ CREATE TABLE `account` (
   `role_id` int(11) NOT NULL COMMENT '角色編號 (FK → role.id)',
   `email` varchar(100) NOT NULL COMMENT '電子郵件',
   `password` varchar(255) NOT NULL COMMENT '密碼',
-  `full_name` varchar(100) NOT NULL COMMENT '姓名'
+  `full_name` varchar(100) NOT NULL COMMENT '姓名',
+  `addr` varchar(255) DEFAULT NULL COMMENT '地址',
+  `birth` date DEFAULT NULL COMMENT '生日'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='帳戶資訊表';
 
 --
 -- 傾印資料表的資料 `account`
 --
 
-INSERT INTO `account` (`account_id`, `account_code`, `role_id`, `email`, `password`, `full_name`) VALUES
-(1, 'ADM1', 1, 'admin@petdept.com', 'adm!nPwd', '系統管理者'),
-(2, 'C001', 2, 'alice@petdept.com', 'alice123', 'Alice Chen'),
-(3, 'C002', 2, 'bob@petdept.com', 'bob123', 'Bob Wu');
+INSERT INTO `account` (`account_id`, `account_code`, `role_id`, `email`, `password`, `full_name`, `addr`, `birth`) VALUES
+(1, 'ADM1', 1, 'admin@petdept.com', 'adm!nPwd', '系統管理者', '台北市中正區中山南路1號', '2000-01-01'),
+(2, 'C001', 2, 'alice@petdept.com', 'alice123', 'Alice Chen', '高雄市鼓山區美術館路12號', '2001-02-14'),
+(3, 'C002', 2, 'bob@petdept.com', 'bob123', 'Bob Wu', '台中市西區公益路123號', '1999-08-23');
 
 -- --------------------------------------------------------
 
@@ -83,8 +85,10 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`order_id`, `account_id`, `order_time`, `status`) VALUES
-(1, 1, '2025-05-26 09:30:00', 'pending'),
-(2, 2, '2025-05-26 10:15:00', 'pending');
+(1, 1, '2025-05-26 09:30:00', 'processing'),
+(2, 2, '2025-05-26 10:15:00', 'cancelled'),
+(5, 1, '2025-06-06 18:34:02', 'cancelled'),
+(6, 3, '2025-06-06 19:28:30', 'pending');
 
 -- --------------------------------------------------------
 
@@ -106,7 +110,11 @@ INSERT INTO `order_detail` (`order_id`, `product_id`, `quantity`) VALUES
 (1, 1, 2),
 (1, 3, 1),
 (2, 2, 3),
-(2, 4, 2);
+(2, 4, 2),
+(5, 3, 2),
+(6, 3, 2),
+(6, 12, 6),
+(6, 14, 10);
 
 -- --------------------------------------------------------
 
@@ -128,9 +136,9 @@ CREATE TABLE `product` (
 
 INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`) VALUES
 (1, '犬用飼料 2kg', 350.00, 50, 'food'),
-(2, '貓抓板', 120.00, 30, 'toy'),
-(3, '寵物睡墊', 450.00, 20, 'accessories'),
-(4, '鳥用水樽', 80.00, 40, 'accessories'),
+(2, '貓抓板', 120.00, 33, 'toy'),
+(3, '寵物睡墊', 450.00, 18, 'accessories'),
+(4, '鳥用水樽', 80.00, 42, 'accessories'),
 (5, '貓砂盆 附蓋', 600.00, 15, 'accessories'),
 (6, '狗狗潔牙骨(10入)', 200.00, 60, 'food'),
 (7, '小動物跑輪', 300.00, 25, 'toy'),
@@ -138,9 +146,9 @@ INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`) VALUE
 (9, '智能餵食器', 1990.00, 10, 'accessories'),
 (10, '犬用牽繩 (紅色)', 250.00, 35, 'accessories'),
 (11, '寵物洗毛精 500ml', 180.00, 45, 'accessories'),
-(12, '貓跳台 四層', 1680.00, 8, 'accessories'),
+(12, '貓跳台 四層', 1680.00, 2, 'accessories'),
 (13, '狗狗雨衣 (M號)', 420.00, 20, 'accessories'),
-(14, '寵物提籃 (小型犬/貓)', 750.00, 12, 'accessories'),
+(14, '寵物提籃 (小型犬/貓)', 750.00, 2, 'accessories'),
 (15, '兔子飼料 1.5kg', 320.00, 18, 'food'),
 (16, '狗狗玩具 - 發聲球', 150.00, 50, 'toy'),
 (17, '貓用逗貓棒', 90.00, 70, 'toy'),
@@ -186,59 +194,6 @@ CREATE TABLE `role_action` (
 INSERT INTO `role_action` (`id`, `role_id`, `action_id`) VALUES
 (1, 1, 1),
 (2, 2, 2);
-
--- --------------------------------------------------------
-
---
--- 資料表結構 `user`
---
-
-CREATE TABLE `user` (
-  `id` int(11) NOT NULL,
-  `password` varchar(10) NOT NULL,
-  `name` varchar(50) DEFAULT NULL,
-  `addr` varchar(255) DEFAULT NULL,
-  `birth` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- 傾印資料表的資料 `user`
---
-
-INSERT INTO `user` (`id`, `password`, `name`, `addr`, `birth`) VALUES
-(1, '12345', '王小明', '台北市中正區中山南路1號', '2000-01-01'),
-(2, '123', '陳美玲', '高雄市鼓山區美術館路12號', '2001-02-14'),
-(3, '12345', '李志強', '台中市西區公益路123號', '1999-08-23'),
-(4, '123', '張庭瑜', '台南市北區成功路88號', '2003-07-30'),
-(5, '123', '周佳怡', '新竹市東區光復路66號', '1998-11-11'),
-(6, '123', '黃建宇', '台北市信義區信義路5段7號', '2002-06-18'),
-(7, '123', '蔡佩珊', '桃園市中壢區中原路55號', '2000-09-09'),
-(8, '888', '吳宗憲', '彰化縣鹿港鎮中山路10號', '1985-04-01'),
-(9, '999', '洪詠晴', '嘉義市西區文化路89號', '2004-12-25'),
-(10, '1010', '曾志豪', '宜蘭縣羅東鎮復興路1號', '1997-03-03'),
-(11, '123', '賴語晨', '新北市板橋區中山路2段100號', '2001-05-20');
-
--- --------------------------------------------------------
-
---
--- 資料表結構 `user_role`
---
-
-CREATE TABLE `user_role` (
-  `id` int(11) NOT NULL,
-  `role_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- 傾印資料表的資料 `user_role`
---
-
-INSERT INTO `user_role` (`id`, `role_id`, `user_id`) VALUES
-(1, 1, 1),
-(2, 2, 2),
-(3, 2, 1),
-(4, 2, 3);
 
 --
 -- 已傾印資料表的索引
@@ -292,20 +247,6 @@ ALTER TABLE `role_action`
   ADD KEY `action_id` (`action_id`);
 
 --
--- 資料表索引 `user`
---
-ALTER TABLE `user`
-  ADD PRIMARY KEY (`id`);
-
---
--- 資料表索引 `user_role`
---
-ALTER TABLE `user_role`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `role_id` (`role_id`),
-  ADD KEY `fk_userrole_user` (`user_id`);
-
---
 -- 在傾印的資料表使用自動遞增(AUTO_INCREMENT)
 --
 
@@ -325,7 +266,7 @@ ALTER TABLE `action`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=3;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=7;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `product`
@@ -344,18 +285,6 @@ ALTER TABLE `role`
 --
 ALTER TABLE `role_action`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- 使用資料表自動遞增(AUTO_INCREMENT) `user`
---
-ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
--- 使用資料表自動遞增(AUTO_INCREMENT) `user_role`
---
-ALTER TABLE `user_role`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- 已傾印資料表的限制式
@@ -386,13 +315,6 @@ ALTER TABLE `order_detail`
 ALTER TABLE `role_action`
   ADD CONSTRAINT `fk_role_action_action` FOREIGN KEY (`action_id`) REFERENCES `action` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_role_action_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE;
-
---
--- 資料表的限制式 `user_role`
---
-ALTER TABLE `user_role`
-  ADD CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_userrole_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

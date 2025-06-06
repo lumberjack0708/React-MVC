@@ -1,8 +1,9 @@
+/* global axios, Qs */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
-import { fetchProductsFromAPI, fetchProductDetailsFromAPI } from '../api';
+import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import ProductDetailModal from '../components/ProductDetailModal';
 // 引入 Ant Design 元件
@@ -70,11 +71,11 @@ function ProductsPage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchProductsFromAPI();
+        const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({}));
         if (response.data && response.data.status === 200) {
           const formattedProducts = response.data.result.map(p => ({
-            id: p.pid,
-            name: p.p_name,
+            id: p.product_id,
+            name: p.name,
             price: parseFloat(p.price),
             category: p.category,
             stock: parseInt(p.stock, 10),
@@ -100,19 +101,19 @@ function ProductsPage() {
     setIsModalLoading(true);
     setSelectedProduct(null); // 清除舊的選擇
     try {
-      const response = await fetchProductDetailsFromAPI(productId);
+      const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({ pid: productId }));
       if (response.data && response.data.status === 200 && response.data.result.length > 0) {
         const p_detail = response.data.result[0];
         // 假設單一產品查詢也返回 pid, p_name 等 (或 product_id 如果後端修正了 SQL 且返回的是 product_id)
         // 若後端 getProduct($pid) 返回的是 product_id, 這裡的 id 也應對應調整
         const detailedProduct = {
-          id: p_detail.product_id || p_detail.pid, // 優先使用 product_id (假設後端SQL已修正)
-          name: p_detail.p_name || p_detail.name,
+          id: p_detail.product_id,
+          name: p_detail.name,
           price: parseFloat(p_detail.price),
           category: p_detail.category,
           stock: parseInt(p_detail.stock, 10),
-          description: p_detail.description || `這是 ${p_detail.p_name || p_detail.name} 的詳細介紹。`, // 假設有 description 欄位
-          imageSource: getProductImage(p_detail.category, p_detail.p_name || p_detail.name) || '/placeholder.png'
+          description: p_detail.description || `這是 ${p_detail.name} 的詳細介紹。`, // 假設有 description 欄位
+          imageSource: getProductImage(p_detail.category, p_detail.name) || '/placeholder.png'
         };
         setSelectedProduct(detailedProduct);
       } else {

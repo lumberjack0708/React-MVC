@@ -22,11 +22,11 @@ $router->register(action: 'newSupplier', class: 'Supplier', method: 'newSupplier
 $router->register(action: 'removeSupplier', class: 'Supplier', method:'removeSupplier');
 $router->register(action: 'updateSupplier', class: 'Supplier', method:'updateSupplier');
 
-// 使用者帳戶資料相關路由
-$router->register(action: 'getUsers', class: 'User', method: 'getUsers');
-$router->register(action: 'newUser', class: 'User', method: 'newUser');
-$router->register(action: 'removeUser', class: 'User', method: 'removeUser');
-$router->register(action: 'updateUser', class: 'User', method: 'updateUser');
+// 使用者帳戶資料相關路由 (已更新為 Account class)
+$router->register(action: 'getUsers', class: 'Account', method: 'getUsers');
+$router->register(action: 'newUser', class: 'Account', method: 'newUser');
+$router->register(action: 'removeUser', class: 'Account', method: 'removeUser');
+$router->register(action: 'updateUser', class: 'Account', method: 'updateUser');
 
 // 訂單管理相關路由
 $router->register(action: 'getOrders', class: 'Order', method: 'getOrders');

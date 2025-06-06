@@ -1,12 +1,13 @@
+/* global axios, Qs */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
-import { fetchProductsFromAPI } from '../api'; // 引入 API 呼叫
+import { getApiUrl } from '../config'; // 引入 API 呼叫
 import { useNotification } from '../components/Notification';
 import { Container, Heading, ProductImage as StyledProductImage } from '../styles/styles';
 import { Card, Button, Typography, Row, Col, Spin, Space, Statistic } from 'antd';
-import { ShoppingCartOutlined, EyeOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { getProductImage } from '../assets/images/index';
 
 const { Title, Paragraph, Text } = Typography;
@@ -30,11 +31,11 @@ function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetchProductsFromAPI();
+        const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({}));
         if (response.data && response.data.status === 200) {
           const formattedProducts = response.data.result.map(p => ({
-            id: p.pid,
-            name: p.p_name,
+            id: p.product_id,
+            name: p.name,
             price: parseFloat(p.price),
             category: p.category,
             stock: parseInt(p.stock, 10),

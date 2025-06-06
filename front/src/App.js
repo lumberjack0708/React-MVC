@@ -6,12 +6,13 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
+import UserProfilePage from './pages/UserProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 // 匯入通知相關的 Provider
 import { NotificationProvider } from './components/Notification';
 // 匯入 Ant Design 元件
-import { Layout, Menu, Badge, theme } from 'antd';
-import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined } from '@ant-design/icons';
+import { Layout, Menu, Badge, theme, Button } from 'antd';
+import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined } from '@ant-design/icons';
 // 匯入 Redux 相關函數和選擇器
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from './store/cartSlice';
@@ -67,6 +68,10 @@ function AppContent() {
     setCurrent(e.key);
   };
   
+  const handleUserIconClick = () => {
+    navigate('/user-profile');
+  };
+
   return (
     <Layout className="layout" style={{ minHeight: '100vh' }}>
       <Header style={{ 
@@ -104,6 +109,19 @@ function AppContent() {
             flex: 1
           }}
         />
+        <div style={{
+          position: 'absolute',
+          right: '50px',
+          top: '50%',
+          transform: 'translateY(-50%)'
+        }}>
+          <Button 
+            type="primary" 
+            shape="circle" 
+            icon={<UserOutlined />}
+            onClick={handleUserIconClick}
+          />
+        </div>
       </Header>
       <Content style={{ padding: '0 50px', marginTop: '16px' }}>
         <div className="site-content" style={{ minHeight: 280, padding: 24, background: token.colorBgContainer, borderRadius: '4px' }}>
@@ -111,6 +129,7 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/user-profile" element={<UserProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

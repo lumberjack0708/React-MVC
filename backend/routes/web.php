@@ -27,4 +27,12 @@ $router->register(action: 'getUsers', class: 'User', method: 'getUsers');
 $router->register(action: 'newUser', class: 'User', method: 'newUser');
 $router->register(action: 'removeUser', class: 'User', method: 'removeUser');
 $router->register(action: 'updateUser', class: 'User', method: 'updateUser');
+
+// 訂單管理相關路由
+$router->register(action: 'getOrders', class: 'Order', method: 'getOrders');
+$router->register(action: 'newOrder', class: 'Order', method: 'newOrder');
+$router->register(action: 'removeOrder', class: 'Order', method: 'removeOrder');
+$router->register(action: 'updateOrder', class: 'Order', method: 'updateOrder');
+$router->register(action: 'getOrderDetail', class: 'Order', method: 'getOrderDetail');
+$router->register(action: 'updateOrderStatus', class: 'Order', method: 'updateOrderStatus');    # 更新訂單狀態
 ?>

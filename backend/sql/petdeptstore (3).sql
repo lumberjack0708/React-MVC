@@ -1,0 +1,400 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- 主機： 127.0.0.1
+-- 產生時間： 2025-06-06 11:10:18
+-- 伺服器版本： 10.4.32-MariaDB
+-- PHP 版本： 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- 資料庫： `petdeptstore`
+--
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `account`
+--
+
+CREATE TABLE `account` (
+  `account_id` int(11) NOT NULL,
+  `account_code` varchar(10) NOT NULL,
+  `role_id` int(11) NOT NULL COMMENT '角色編號 (FK → role.id)',
+  `email` varchar(100) NOT NULL COMMENT '電子郵件',
+  `password` varchar(255) NOT NULL COMMENT '密碼',
+  `full_name` varchar(100) NOT NULL COMMENT '姓名'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='帳戶資訊表';
+
+--
+-- 傾印資料表的資料 `account`
+--
+
+INSERT INTO `account` (`account_id`, `account_code`, `role_id`, `email`, `password`, `full_name`) VALUES
+(1, 'ADM1', 1, 'admin@petdept.com', 'adm!nPwd', '系統管理者'),
+(2, 'C001', 2, 'alice@petdept.com', 'alice123', 'Alice Chen'),
+(3, 'C002', 2, 'bob@petdept.com', 'bob123', 'Bob Wu');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `action`
+--
+
+CREATE TABLE `action` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `action`
+--
+
+INSERT INTO `action` (`id`, `name`) VALUES
+(1, 'getUsers'),
+(2, 'newUser'),
+(3, 'getProducts');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `orders`
+--
+
+CREATE TABLE `orders` (
+  `order_id` int(11) NOT NULL COMMENT '整數型自動遞增主鍵',
+  `account_id` int(10) NOT NULL COMMENT '帳戶編號 (FK → account.account_id)',
+  `order_time` datetime NOT NULL COMMENT '訂購時間',
+  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '訂單狀態 (pending, processing, shipped, cancelled)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='訂單表';
+
+--
+-- 傾印資料表的資料 `orders`
+--
+
+INSERT INTO `orders` (`order_id`, `account_id`, `order_time`, `status`) VALUES
+(1, 1, '2025-05-26 09:30:00', 'pending'),
+(2, 2, '2025-05-26 10:15:00', 'pending');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `order_detail`
+--
+
+CREATE TABLE `order_detail` (
+  `order_id` int(11) NOT NULL COMMENT '訂單編號 (對應 orders.order_id)',
+  `product_id` int(11) NOT NULL COMMENT '商品編號 (FK → product.product_id)',
+  `quantity` int(11) NOT NULL COMMENT '數量'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='訂單明細表';
+
+--
+-- 傾印資料表的資料 `order_detail`
+--
+
+INSERT INTO `order_detail` (`order_id`, `product_id`, `quantity`) VALUES
+(1, 1, 2),
+(1, 3, 1),
+(2, 2, 3),
+(2, 4, 2);
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `product`
+--
+
+CREATE TABLE `product` (
+  `product_id` int(11) NOT NULL COMMENT '商品編號',
+  `name` varchar(100) NOT NULL COMMENT '商品名稱',
+  `price` decimal(10,2) NOT NULL COMMENT '售價',
+  `stock` int(11) NOT NULL COMMENT '存貨量',
+  `category` varchar(50) NOT NULL COMMENT '商品類別'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='商品資訊表';
+
+--
+-- 傾印資料表的資料 `product`
+--
+
+INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`) VALUES
+(1, '犬用飼料 2kg', 350.00, 50, 'food'),
+(2, '貓抓板', 120.00, 30, 'toy'),
+(3, '寵物睡墊', 450.00, 20, 'accessories'),
+(4, '鳥用水樽', 80.00, 40, 'accessories'),
+(5, '貓砂盆 附蓋', 600.00, 15, 'accessories'),
+(6, '狗狗潔牙骨(10入)', 200.00, 60, 'food'),
+(7, '小動物跑輪', 300.00, 25, 'toy'),
+(8, '貓咪零食 - 鮪魚條', 90.00, 80, 'food'),
+(9, '智能餵食器', 1990.00, 10, 'accessories'),
+(10, '犬用牽繩 (紅色)', 250.00, 35, 'accessories'),
+(11, '寵物洗毛精 500ml', 180.00, 45, 'accessories'),
+(12, '貓跳台 四層', 1680.00, 8, 'accessories'),
+(13, '狗狗雨衣 (M號)', 420.00, 20, 'accessories'),
+(14, '寵物提籃 (小型犬/貓)', 750.00, 12, 'accessories'),
+(15, '兔子飼料 1.5kg', 320.00, 18, 'food'),
+(16, '狗狗玩具 - 發聲球', 150.00, 50, 'toy'),
+(17, '貓用逗貓棒', 90.00, 70, 'toy'),
+(18, '倉鼠木屑 (無塵)', 110.00, 40, 'accessories'),
+(19, '水龜濾水器', 1350.00, 5, 'accessories'),
+(20, '鳥飼料混合包 1kg', 160.00, 28, 'food');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `role`
+--
+
+CREATE TABLE `role` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `role`
+--
+
+INSERT INTO `role` (`id`, `name`) VALUES
+(1, 'admin'),
+(2, 'customer');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `role_action`
+--
+
+CREATE TABLE `role_action` (
+  `id` int(11) NOT NULL,
+  `role_id` int(11) NOT NULL,
+  `action_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `role_action`
+--
+
+INSERT INTO `role_action` (`id`, `role_id`, `action_id`) VALUES
+(1, 1, 1),
+(2, 2, 2);
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `user`
+--
+
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL,
+  `password` varchar(10) NOT NULL,
+  `name` varchar(50) DEFAULT NULL,
+  `addr` varchar(255) DEFAULT NULL,
+  `birth` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `user`
+--
+
+INSERT INTO `user` (`id`, `password`, `name`, `addr`, `birth`) VALUES
+(1, '12345', '王小明', '台北市中正區中山南路1號', '2000-01-01'),
+(2, '123', '陳美玲', '高雄市鼓山區美術館路12號', '2001-02-14'),
+(3, '12345', '李志強', '台中市西區公益路123號', '1999-08-23'),
+(4, '123', '張庭瑜', '台南市北區成功路88號', '2003-07-30'),
+(5, '123', '周佳怡', '新竹市東區光復路66號', '1998-11-11'),
+(6, '123', '黃建宇', '台北市信義區信義路5段7號', '2002-06-18'),
+(7, '123', '蔡佩珊', '桃園市中壢區中原路55號', '2000-09-09'),
+(8, '888', '吳宗憲', '彰化縣鹿港鎮中山路10號', '1985-04-01'),
+(9, '999', '洪詠晴', '嘉義市西區文化路89號', '2004-12-25'),
+(10, '1010', '曾志豪', '宜蘭縣羅東鎮復興路1號', '1997-03-03'),
+(11, '123', '賴語晨', '新北市板橋區中山路2段100號', '2001-05-20');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `user_role`
+--
+
+CREATE TABLE `user_role` (
+  `id` int(11) NOT NULL,
+  `role_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `user_role`
+--
+
+INSERT INTO `user_role` (`id`, `role_id`, `user_id`) VALUES
+(1, 1, 1),
+(2, 2, 2),
+(3, 2, 1),
+(4, 2, 3);
+
+--
+-- 已傾印資料表的索引
+--
+
+--
+-- 資料表索引 `account`
+--
+ALTER TABLE `account`
+  ADD PRIMARY KEY (`account_id`),
+  ADD KEY `idx_account_role` (`role_id`);
+
+--
+-- 資料表索引 `action`
+--
+ALTER TABLE `action`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 資料表索引 `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`order_id`),
+  ADD KEY `idx_account_id` (`account_id`);
+
+--
+-- 資料表索引 `order_detail`
+--
+ALTER TABLE `order_detail`
+  ADD PRIMARY KEY (`order_id`,`product_id`),
+  ADD KEY `idx_product_id` (`product_id`);
+
+--
+-- 資料表索引 `product`
+--
+ALTER TABLE `product`
+  ADD PRIMARY KEY (`product_id`);
+
+--
+-- 資料表索引 `role`
+--
+ALTER TABLE `role`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 資料表索引 `role_action`
+--
+ALTER TABLE `role_action`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `role_id` (`role_id`),
+  ADD KEY `action_id` (`action_id`);
+
+--
+-- 資料表索引 `user`
+--
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 資料表索引 `user_role`
+--
+ALTER TABLE `user_role`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `role_id` (`role_id`),
+  ADD KEY `fk_userrole_user` (`user_id`);
+
+--
+-- 在傾印的資料表使用自動遞增(AUTO_INCREMENT)
+--
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `account`
+--
+ALTER TABLE `account`
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `action`
+--
+ALTER TABLE `action`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=3;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `product`
+--
+ALTER TABLE `product`
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '商品編號', AUTO_INCREMENT=23;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `role`
+--
+ALTER TABLE `role`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `role_action`
+--
+ALTER TABLE `role_action`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `user`
+--
+ALTER TABLE `user`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `user_role`
+--
+ALTER TABLE `user_role`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- 已傾印資料表的限制式
+--
+
+--
+-- 資料表的限制式 `account`
+--
+ALTER TABLE `account`
+  ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON UPDATE CASCADE;
+
+--
+-- 資料表的限制式 `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `account` (`account_id`) ON DELETE CASCADE;
+
+--
+-- 資料表的限制式 `order_detail`
+--
+ALTER TABLE `order_detail`
+  ADD CONSTRAINT `order_detail_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `order_detail_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `product` (`product_id`) ON UPDATE CASCADE;
+
+--
+-- 資料表的限制式 `role_action`
+--
+ALTER TABLE `role_action`
+  ADD CONSTRAINT `fk_role_action_action` FOREIGN KEY (`action_id`) REFERENCES `action` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_role_action_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE;
+
+--
+-- 資料表的限制式 `user_role`
+--
+ALTER TABLE `user_role`
+  ADD CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_userrole_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

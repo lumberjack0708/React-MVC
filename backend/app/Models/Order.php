@@ -26,8 +26,8 @@
         }
 
         // 店家端：從【預覽】點進來之後可以看詳細訂單內容
-        public function getOrderDetail(){
-            $sql = "SELECT 
+        public function getOrderDetail($order_id){
+            $sql = "SELECT
                         o.order_id        AS `訂單編號`,
                         o.order_time      AS `訂單時間`,
                         a.account_code    AS `帳號號碼(唯一)`,
@@ -37,13 +37,14 @@
                         p.price           AS `單價`,
                         (od.quantity * p.price) AS `小計`
                     FROM orders o
-                    JOIN order_detail od 
+                    JOIN order_detail od
                         ON o.order_id = od.order_id
-                    JOIN account a 
+                    JOIN account a
                         ON o.account_id = a.account_id
-                    JOIN product p 
-                        ON od.product_id = p.product_id;";
-            $arg = NULL;
+                    JOIN product p
+                        ON od.product_id = p.product_id
+                    WHERE o.order_id = ?;";
+            $arg = array($order_id);
             return DB::select($sql, $arg);
         }
         

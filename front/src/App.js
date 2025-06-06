@@ -84,10 +84,10 @@ function AppContent() {
 
   return (
     <Layout className="layout" style={{ minHeight: '100vh' }}>
-      <Header style={{ 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 1, 
+      <Header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
         width: '100%',
         background: token.colorPrimary,
         padding: '0 50px',

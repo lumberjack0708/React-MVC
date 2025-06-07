@@ -48,8 +48,28 @@
             return DB::select($sql, $arg);
         }
         
-        // 顧客端：若有挾帶`account_id`，則回傳該帳號的訂單紀錄
+        // 顧客端：若有挾帶`account_id`，則回傳該帳號的訂單總覽
         public function getOrder($account_id){
+            $sql = "SELECT 
+                        o.order_id        AS `訂單編號`,
+                        o.order_time      AS `訂單時間`,
+                        SUM(od.quantity * p.price) AS `訂單總金額`,
+                        o.status          AS `訂單狀態`,
+                        COUNT(od.product_id) AS `商品種類數量`
+                    FROM orders o
+                    JOIN order_detail od  
+                        ON o.order_id = od.order_id
+                    JOIN product p 
+                        ON od.product_id = p.product_id
+                    WHERE o.account_id = ?
+                    GROUP BY o.order_id, o.order_time, o.status
+                    ORDER BY o.order_time DESC;";
+            $arg = array($account_id);
+            return DB::select($sql, $arg);
+        }
+        
+        // 顧客端：獲取該帳號的訂單詳細記錄（原本的 getOrder 邏輯）
+        public function getOrderDetails($account_id){
             $sql = "SELECT
                         od.order_id         AS `訂單編號`,
                         p.name              AS `產品名稱`,
@@ -65,6 +85,52 @@
                     ORDER BY o.order_time DESC;";
             $arg = array($account_id);
             return DB::select($sql, $arg);
+        }
+        
+        // 顧客端：獲取該帳號的訂單統計資料
+        public function getOrderStatistics($account_id){
+            // 總訂單數
+            $totalOrdersSql = "SELECT COUNT(*) AS total_orders FROM orders WHERE account_id = ?";
+            $totalOrdersResult = DB::select($totalOrdersSql, array($account_id));
+            $totalOrders = $totalOrdersResult['result'][0]['total_orders'] ?? 0;
+            
+            // 已取消訂單數
+            $cancelledOrdersSql = "SELECT COUNT(*) AS cancelled_orders FROM orders WHERE account_id = ? AND status = 'cancelled'";
+            $cancelledOrdersResult = DB::select($cancelledOrdersSql, array($account_id));
+            $cancelledOrders = $cancelledOrdersResult['result'][0]['cancelled_orders'] ?? 0;
+            
+            // 實際購買金額（排除已取消訂單）
+            $totalAmountSql = "SELECT 
+                                COALESCE(SUM(od.quantity * p.price), 0) AS total_amount
+                               FROM orders o
+                               JOIN order_detail od ON o.order_id = od.order_id
+                               JOIN product p ON od.product_id = p.product_id
+                               WHERE o.account_id = ? AND o.status != 'cancelled'";
+            $totalAmountResult = DB::select($totalAmountSql, array($account_id));
+            $totalAmount = $totalAmountResult['result'][0]['total_amount'] ?? 0;
+            
+            // 購買商品種類數（排除已取消訂單）
+            $totalItemsSql = "SELECT 
+                               COALESCE(SUM(item_count), 0) AS total_items
+                              FROM (
+                                SELECT COUNT(od.product_id) AS item_count
+                                FROM orders o
+                                JOIN order_detail od ON o.order_id = od.order_id
+                                WHERE o.account_id = ? AND o.status != 'cancelled'
+                                GROUP BY o.order_id
+                              ) AS order_items";
+            $totalItemsResult = DB::select($totalItemsSql, array($account_id));
+            $totalItems = $totalItemsResult['result'][0]['total_items'] ?? 0;
+            
+            return array(
+                'status' => 200,
+                'result' => array(
+                    'total_orders' => intval($totalOrders),             # 總訂單數
+                    'cancelled_orders' => intval($cancelledOrders),     # 已取消訂單數
+                    'total_amount' => intval($totalAmount),             # 實際購買金額
+                    'total_items' => intval($totalItems)                # 購買商品種類數
+                )
+            );
         }
         
         public function newOrder($account_id, $products_id, $quantity){

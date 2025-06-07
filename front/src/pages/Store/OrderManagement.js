@@ -1,3 +1,4 @@
+/* global axios, Qs */
 import React, { useState, useEffect } from 'react';
 import { Table, Tag, Space, Typography, notification, Select, Button, Modal } from 'antd';
 import { getApiUrl } from '../../config';
@@ -16,7 +17,7 @@ const OrderManagement = () => {
     setLoading(true);
     try {
       const url = getApiUrl('getOrders');
-      const response = await window.axios.get(url);
+      const response = await axios.get(url);
       if (response.data.status === 200) {
         setOrders(response.data.result);
       } else {
@@ -44,8 +45,8 @@ const OrderManagement = () => {
     setIsDetailModalVisible(true);
     try {
       const url = getApiUrl('getOrderDetail');
-      const data = window.Qs.stringify({ order_id: orderId });
-      const response = await window.axios.post(url, data);
+      const data = Qs.stringify({ order_id: orderId });
+      const response = await axios.post(url, data);
 
       if (response.data.status === 200) {
         setCurrentOrderDetails(response.data.result);
@@ -68,8 +69,8 @@ const OrderManagement = () => {
     setLoading(true);
     try {
       const url = getApiUrl('updateOrderStatus');
-      const data = window.Qs.stringify({ order_id: orderId, status: newStatus });
-      const response = await window.axios.post(url, data);
+      const data = Qs.stringify({ order_id: orderId, status: newStatus });
+      const response = await axios.post(url, data);
 
       if (response.data.status === 200) {
         notification.success({

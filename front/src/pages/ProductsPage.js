@@ -1,21 +1,19 @@
 /* global axios, Qs */
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
 import { getApiUrl, API_CONFIG } from '../config';
 import { useNotification } from '../components/Notification';
 import ProductDetailModal from '../components/ProductDetailModal';
 // 引入 Ant Design 元件
-import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Divider, Radio, Tooltip, Spin, message } from 'antd';
+import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Radio, Tooltip, Spin } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined, FilterOutlined, SortAscendingOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 // 引入保留的 Emotion 樣式組件
-import { Container, Heading, ProductImage as StyledProductImage } from '../styles/styles';
+import { Container, Heading } from '../styles/styles';
 import { getProductImage } from '../assets/images/index';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { Meta } = Card;
 
 /**
  * @function ProductsPage
@@ -24,7 +22,6 @@ const { Meta } = Card;
  */
 
 function ProductsPage() {
-  const navigate = useNavigate();
   const { notify } = useNotification();
   
   const dispatch = useDispatch(); // 使用 Redux dispatch
@@ -73,7 +70,7 @@ function ProductsPage() {
     loadProducts();
   }, [notify]);
   
-  // 處理查看詳情 - 現在會從後端獲取最新的產品資訊
+  // 處理查看詳情 - 從後端獲取最新的產品資訊
   const handleViewDetails = async (productId) => {
     setIsModalLoading(true);
     setSelectedProduct(null); // 清除舊的選擇

@@ -34,6 +34,14 @@ class Order extends Controller
         return $this->om->getOrderDetail($orderId);
     }
     
+    public function getOrderStatistics(){
+        if (!isset($_POST['account_id'])) {
+            return array('status' => 400, 'message' => '缺少必要參數：account_id');
+        }
+        $account_id = $_POST['account_id'];
+        return $this->om->getOrderStatistics($account_id);
+    }
+    
     public function newOrder(){
         // 訂單主表
         $account_id = $_POST['account_id'];

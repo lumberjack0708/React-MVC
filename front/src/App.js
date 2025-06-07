@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
 import UserProfilePage from './pages/UserProfilePage';
+import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import NotFoundPage from './pages/NotFoundPage';
 // 匯入店家管理頁面
 import StoreLayout from './pages/Store/StoreLayout';
@@ -16,7 +17,7 @@ import OrderManagement from './pages/Store/OrderManagement';
 import { NotificationProvider } from './components/Notification';
 // 匯入 Ant Design 元件
 import { Layout, Menu, Badge, theme, Button, App as AntApp } from 'antd';
-import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, ShopOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, ShopOutlined, CalendarOutlined } from '@ant-design/icons';
 // 匯入 Redux 相關函數和選擇器
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from './store/cartSlice';
@@ -43,6 +44,7 @@ function AppContent() {
     const path = window.location.pathname;
     if (path === '/') setCurrent('home');
     else if (path.includes('/products')) setCurrent('products');
+    else if (path.includes('/purchase-history')) setCurrent('purchase-history');
     else if (path.includes('/cart')) setCurrent('cart');
     else if (path.includes('/store')) setCurrent('store');
   }, []);
@@ -59,6 +61,11 @@ function AppContent() {
       label: <Link to="/products">瀏覽全部商品</Link>,
     },
     {
+      key: 'purchase-history',
+      icon: <CalendarOutlined />,
+      label: <Link to="/purchase-history">購買紀錄</Link>,
+    },
+    {
       key: 'cart',
       icon: (
         <Badge count={cartItemCount} size="small">
@@ -66,11 +73,6 @@ function AppContent() {
         </Badge>
       ),
       label: <Link to="/cart">購物車</Link>,
-    },
-    {
-      key: 'store',
-      icon: <ShopOutlined />,
-      label: <Link to="/store/products">店家管理</Link>,
     },
   ];
 
@@ -80,6 +82,10 @@ function AppContent() {
   
   const handleUserIconClick = () => {
     navigate('/user-profile');
+  };
+  
+  const handleStoreIconClick = () => {
+    navigate('/store/products');
   };
 
   return (
@@ -123,13 +129,23 @@ function AppContent() {
           position: 'absolute',
           right: '50px',
           top: '50%',
-          transform: 'translateY(-50%)'
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          gap: '8px'
         }}>
           <Button 
             type="primary" 
             shape="circle" 
             icon={<UserOutlined />}
             onClick={handleUserIconClick}
+            title="用戶資訊"
+          />
+          <Button 
+            type="primary" 
+            shape="circle" 
+            icon={<ShopOutlined />}
+            onClick={handleStoreIconClick}
+            title="店家管理"
           />
         </div>
       </Header>
@@ -138,6 +154,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
+            <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/user-profile" element={<UserProfilePage />} />
             {/* 店家管理路由 */}

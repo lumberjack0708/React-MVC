@@ -1,3 +1,4 @@
+/* global axios, Qs */
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Typography, notification, Modal, Form, Popconfirm } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
@@ -18,7 +19,7 @@ const ProductManagement = () => {
     setLoading(true);
     try {
       const url = getApiUrl('getProducts');
-      const response = await window.axios.get(url); // 使用 window.axios
+      const response = await axios.get(url);
       if (response.data.status === 200) {
         setProducts(response.data.result);
       } else {
@@ -88,7 +89,7 @@ const ProductManagement = () => {
         }
 
         try {
-          const response = await window.axios.post(url, formData);
+          const response = await axios.post(url, formData);
 
           if (response.data.status === 200) {
             notification.success({
@@ -125,8 +126,8 @@ const ProductManagement = () => {
     setLoading(true);
     try {
       const url = getApiUrl('removeProduct');
-      const data = window.Qs.stringify({ pid: productId });
-      const response = await window.axios.post(url, data);
+      const data = Qs.stringify({ pid: productId });
+      const response = await axios.post(url, data);
       if (response.data.status === 200) {
         notification.success({
           message: '刪除成功',

@@ -30,6 +30,8 @@ $router->register(action: 'updateUser', class: 'Account', method: 'updateUser');
 
 // 訂單管理相關路由
 $router->register(action: 'getOrders', class: 'Order', method: 'getOrders');
+$router->register(action: 'getOrder', class: 'Order', method: 'getOrder');
+$router->register(action: 'getOrderStatistics', class: 'Order', method: 'getOrderStatistics');      # 顧客端：獲取該帳號的訂單統計資料
 $router->register(action: 'newOrder', class: 'Order', method: 'newOrder');
 $router->register(action: 'removeOrder', class: 'Order', method: 'removeOrder');
 $router->register(action: 'updateOrder', class: 'Order', method: 'updateOrder');

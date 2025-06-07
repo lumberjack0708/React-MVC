@@ -3,10 +3,11 @@ import styled from '@emotion/styled';
 // 首頁樣式
 
 // 歡迎卡片
-export const WelcomeCard = styled.div`
-  margin-bottom: 30px;
-  text-align: center;
-`;
+// 歡迎卡片樣式
+export const WelcomeCardStyle = {
+  marginBottom: '30px',
+  textAlign: 'center'
+};
 
 // 歡迎卡片內容空間
 export const WelcomeCardSpace = styled.div`

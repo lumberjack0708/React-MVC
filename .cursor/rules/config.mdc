@@ -1,8 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: false
----
-Please keep config.js intact. It stores important base API URLs used across the project.
-
-Only extend it when there's a valid reason. Do not remove or rename it.

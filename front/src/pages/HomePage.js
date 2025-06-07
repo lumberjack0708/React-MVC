@@ -7,7 +7,7 @@ import { getApiUrl } from '../config'; // 引入 API 呼叫
 import { useNotification } from '../components/Notification';
 import { Container, Heading, ProductImage as StyledProductImage } from '../styles/styles';
 import {
-  WelcomeCard,
+  WelcomeCardStyle,
   WelcomeCardSpace,
   RecommendedSection,
   RecommendedTitle,
@@ -81,7 +81,7 @@ function HomePage() {
     <Container>
       <Heading>寵物百貨歡迎您</Heading>
       
-      <Card style={WelcomeCard}>
+      <Card style={WelcomeCardStyle}>
         <Title level={2}>為您的毛小孩找到最好的</Title>
         <Paragraph>我們的寵物百貨提供各種優質的寵物產品，包括食品、玩具、配件和保健用品。</Paragraph>
         <WelcomeCardSpace>

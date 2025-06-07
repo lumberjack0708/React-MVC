@@ -6,6 +6,18 @@ import { addToCart } from '../store/cartSlice';
 import { getApiUrl } from '../config'; // 引入 API 呼叫
 import { useNotification } from '../components/Notification';
 import { Container, Heading, ProductImage as StyledProductImage } from '../styles/styles';
+import {
+  WelcomeCard,
+  WelcomeCardSpace,
+  RecommendedSection,
+  RecommendedTitle,
+  LoadingRecommendedContainer,
+  ErrorRecommendedContainer,
+  EmptyRecommendedContainer,
+  RecommendedProductImageStyle,
+  RecommendedProductTitle,
+  RecommendedProductPriceStyle
+} from '../styles/homePageStyles';
 import { Card, Button, Typography, Row, Col, Spin, Space, Statistic } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { getProductImage } from '../assets/images/index';
@@ -69,10 +81,10 @@ function HomePage() {
     <Container>
       <Heading>寵物百貨歡迎您</Heading>
       
-      <Card style={{ marginBottom: 30, textAlign: 'center' }}>
+      <Card style={WelcomeCard}>
         <Title level={2}>為您的毛小孩找到最好的</Title>
         <Paragraph>我們的寵物百貨提供各種優質的寵物產品，包括食品、玩具、配件和保健用品。</Paragraph>
-        <Space style={{ marginTop: '20px' }}>
+        <WelcomeCardSpace>
           <Button 
             type="primary" 
             size="large"
@@ -81,20 +93,20 @@ function HomePage() {
           >
             瀏覽全部商品
           </Button>
-        </Space>
+        </WelcomeCardSpace>
       </Card>
       
-      <div style={{ marginTop: '30px' }}>
-        <Title level={3} style={{ marginBottom: '20px', textAlign: 'center' }}>熱門推薦</Title>
+      <RecommendedSection>
+        <RecommendedTitle>熱門推薦</RecommendedTitle>
         
         {loading && (
-          <div style={{ textAlign: 'center', padding: '40px' }}><Spin size="large" /></div>
+          <LoadingRecommendedContainer><Spin size="large" /></LoadingRecommendedContainer>
         )}
         {!loading && error && featuredProducts.length === 0 && (
-           <div style={{ textAlign: 'center', padding: '20px' }}><Text type="danger">無法載入推薦產品: {error}</Text></div>
+           <ErrorRecommendedContainer><Text type="danger">無法載入推薦產品: {error}</Text></ErrorRecommendedContainer>
         )}
         {!loading && !error && featuredProducts.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px' }}><Text>暫無推薦產品。</Text></div>
+            <EmptyRecommendedContainer><Text>暫無推薦產品。</Text></EmptyRecommendedContainer>
         )}
 
         {!loading && featuredProducts.length > 0 && (
@@ -107,7 +119,7 @@ function HomePage() {
                     <StyledProductImage 
                       src={getProductImage(product.category, product.name) || '/placeholder.png'} 
                       alt={product.name || '產品圖片'}
-                      style={{ height: 200, objectFit: 'contain', padding: '10px' }}
+                      style={RecommendedProductImageStyle}
                     />
                   }
                   actions={[
@@ -128,13 +140,13 @@ function HomePage() {
                   ]}
                 >
                   <Card.Meta
-                    title={<Title level={4} style={{ minHeight: '56px'}}>{product.name || '未命名產品'}</Title>}
+                    title={<RecommendedProductTitle>{product.name || '未命名產品'}</RecommendedProductTitle>}
                     description={
                       <Statistic 
                         value={product.price} 
                         prefix="NT$"
                         precision={2}
-                        valueStyle={{ color: '#2B2118', fontSize: '18px' }}
+                        valueStyle={RecommendedProductPriceStyle}
                       />
                     }
                   />
@@ -143,7 +155,7 @@ function HomePage() {
             ))}
           </Row>
         )}
-      </div>
+      </RecommendedSection>
     </Container>
   );
 }

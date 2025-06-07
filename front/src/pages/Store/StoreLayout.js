@@ -2,6 +2,13 @@ import React from 'react';
 import { Layout, Menu } from 'antd';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { AppstoreOutlined, SolutionOutlined } from '@ant-design/icons';
+import {
+  StoreLayoutStyle,
+  StoreSiderStyle,
+  StoreSiderMenuStyle,
+  StoreContentLayoutStyle,
+  StoreContentStyle
+} from '../../styles/storeStyles';
 
 const { Sider, Content } = Layout;
 
@@ -34,25 +41,17 @@ const StoreLayout = () => {
   };
 
   return (
-    <Layout style={{ minHeight: 'calc(100vh - 220px)', background: 'transparent' }}>
-      <Sider width={200} style={{ background: '#fff', borderRadius: '4px' }}>
+    <Layout style={StoreLayoutStyle}>
+      <Sider width={200} style={StoreSiderStyle}>
         <Menu
           mode="inline"
           selectedKeys={getSelectedKeys()}
           items={menuItems} // 使用 'items' prop
-          style={{ height: '100%', borderRight: 0 }}
+          style={StoreSiderMenuStyle}
         />
       </Sider>
-      <Layout style={{ padding: '0 0 0 24px', background: 'transparent' }}>
-        <Content
-          style={{
-            padding: 24,
-            margin: 0,
-            minHeight: 280,
-            background: '#fff',
-            borderRadius: '4px',
-          }}
-        >
+      <Layout style={StoreContentLayoutStyle}>
+        <Content style={StoreContentStyle}>
           <Outlet />
         </Content>
       </Layout>

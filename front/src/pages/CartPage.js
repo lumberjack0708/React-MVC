@@ -18,6 +18,7 @@ import { Card, Button, Typography, Space, Row, Col, Statistic, Divider, Empty } 
 import { ShoppingOutlined, MinusOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 // 匯入保留的 Emotion 樣式元件
 import { Container, Heading } from '../styles/styles';
+import { CartItemRightContainerStyle, CartQuantityText } from '../styles/cartPageStyles';
 
 const { Title, Text } = Typography;
 
@@ -130,13 +131,13 @@ function CartPage() {
                   <Title level={4}>{item.name}</Title>
                   <Text>單價: ${item.price}</Text>
                 </Col>
-                <Col span={12} style={{ textAlign: 'right' }}>
+                <Col span={12} style={CartItemRightContainerStyle}>
                   <Space>
                     <Button 
                       icon={<MinusOutlined />}
                       onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                     />
-                    <Text strong style={{ margin: '0 8px' }}>{item.quantity}</Text>
+                    <CartQuantityText>{item.quantity}</CartQuantityText>
                     <Button 
                       icon={<PlusOutlined />}
                       onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}

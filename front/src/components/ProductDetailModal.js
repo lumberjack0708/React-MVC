@@ -84,7 +84,7 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
             <Statistic
               value={product.price}
               prefix="$"
-              valueStyle={{ color: '#2B2118', fontWeight: 'bold' }}
+              valueStyle={{ color: '#2B2118', fontWeight: 700 }}
             />
           </Descriptions.Item>
           <Descriptions.Item label="類別">

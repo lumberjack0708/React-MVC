@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Heading } from '../styles/styles';
+import { NotFoundCardStyle } from '../styles/notFoundStyles';
 import { Card, Button, Typography, Result } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 
@@ -13,7 +14,7 @@ const { Paragraph } = Typography;
 function NotFoundPage() {
   return (
     <Container>
-      <Card style={{ textAlign: 'center', padding: '40px 20px' }}>
+      <Card style={NotFoundCardStyle}>
         <Result
           status="404"
           title="404 - 頁面未找到"

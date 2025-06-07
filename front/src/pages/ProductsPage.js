@@ -10,6 +10,18 @@ import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Ra
 import { ShoppingCartOutlined, EyeOutlined, FilterOutlined, SortAscendingOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 // 引入保留的 Emotion 樣式組件
 import { Container, Heading } from '../styles/styles';
+import {
+  LoadingContainer,
+  ErrorContainer,
+  FilterCardStyle,
+  IconStyle,
+  StatisticValueStyle,
+  RightAlignContainer,
+  ProductImageContainer,
+  ProductImageStyle,
+  ProductTitle,
+  LoadingDetailContainer
+} from '../styles/pageStyles';
 import { getProductImage } from '../assets/images/index';
 
 const { Title, Text } = Typography;
@@ -137,11 +149,11 @@ function ProductsPage() {
   ];
 
   if (loading) {
-    return <Container style={{ textAlign: 'center', padding: '50px' }}><Spin size="large" /> <Typography.Title level={3}>產品載入中...</Typography.Title></Container>;
+    return <LoadingContainer><Spin size="large" /> <Typography.Title level={3}>產品載入中...</Typography.Title></LoadingContainer>;
   }
 
   if (error && products.length === 0) { // 只在完全沒有產品數據時顯示主要錯誤
-    return <Container style={{ textAlign: 'center', padding: '50px' }}><Typography.Title level={3} type="danger">載入產品時發生錯誤: {error}</Typography.Title></Container>;
+    return <ErrorContainer><Typography.Title level={3} type="danger">載入產品時發生錯誤: {error}</Typography.Title></ErrorContainer>;
   }
 
   return (
@@ -149,11 +161,11 @@ function ProductsPage() {
       <Heading>瀏覽全部商品</Heading>
       
       {/* 篩選器UI */}
-      <Card style={{ marginBottom: 20 }}>
+      <Card style={FilterCardStyle}>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} lg={9}>
             <Space align="center">
-              <FilterOutlined style={{ fontSize: '16px', color: '#2B2118' }} />
+              <FilterOutlined style={IconStyle} />
               <Text strong>按類別篩選：</Text>
               <Select 
                 value={categoryFilter} 
@@ -171,7 +183,7 @@ function ProductsPage() {
           
           <Col xs={24} lg={10}>
             <Space size="middle" style={{ display: 'flex', flexWrap: 'nowrap' }}>
-              <SortAscendingOutlined style={{ fontSize: '16px', color: '#2B2118' }} />
+              <SortAscendingOutlined style={IconStyle} />
               <Text strong>排序：</Text>
               <Radio.Group 
                 value={sortOrder} 
@@ -187,21 +199,23 @@ function ProductsPage() {
             </Space>
           </Col>
           
-          <Col xs={24} lg={5} style={{ textAlign: 'right' }}>
-            <Tooltip title="商品總數">
-              <Statistic 
-                title={
-                  <Space>
-                    <AppstoreOutlined style={{ fontSize: '16px', color: '#2B2118' }} />
-                    <Text strong>商品數量</Text>
-                  </Space>
-                }
-                value={filteredProducts.length} 
-                valueStyle={{ fontSize: '18px', color: '#2B2118', fontWeight: 'bold' }}
-                prefix={<UnorderedListOutlined />}
-                suffix="件"
-              />
-            </Tooltip>
+          <Col xs={24} lg={5}>
+            <RightAlignContainer>
+              <Tooltip title="商品總數">
+                <Statistic 
+                  title={
+                    <Space>
+                      <AppstoreOutlined style={IconStyle} />
+                      <Text strong>商品數量</Text>
+                    </Space>
+                  }
+                  value={filteredProducts.length} 
+                  valueStyle={StatisticValueStyle}
+                                  prefix={<UnorderedListOutlined />}
+                  suffix="件"
+                />
+              </Tooltip>
+            </RightAlignContainer>
           </Col>
         </Row>
       </Card>
@@ -223,7 +237,7 @@ function ProductsPage() {
               <Card
                 hoverable
                 cover={
-                  <div style={{ height: 220, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                  <ProductImageContainer>
                     <img
                       alt={product.name}
                       src={
@@ -231,9 +245,9 @@ function ProductsPage() {
                           ? `${API_CONFIG.assetBaseURL}public/${product.image_url}`
                           : getProductImage(product.category, product.name)
                       }
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      style={ProductImageStyle}
                     />
-                  </div>
+                  </ProductImageContainer>
                 }
                 actions={[
                   <Button 
@@ -254,9 +268,9 @@ function ProductsPage() {
               >
                 <Card.Meta
                   title={
-                    <Title level={4} style={{ minHeight: '56px' }}>
+                    <ProductTitle>
                       {product.name || '未命名產品'}
-                    </Title>
+                    </ProductTitle>
                   }
                   description={
                     <Space direction="vertical" size="small">
@@ -264,7 +278,7 @@ function ProductsPage() {
                         value={product.price}
                         prefix="NT$"
                         precision={2}
-                        valueStyle={{ color: '#2B2118', fontSize: '18px' }}
+                        valueStyle={StatisticValueStyle}
                       />
                       <Text type="secondary">庫存 {product.stock} 件</Text>
                     </Space>
@@ -277,7 +291,7 @@ function ProductsPage() {
       </Row>
       
       {/* 產品詳情模態框 */}
-      {isModalLoading && <div style={{textAlign: 'center', padding: '20px'}}><Spin tip="載入產品詳情中..." /></div>}
+      {isModalLoading && <LoadingDetailContainer><Spin tip="載入產品詳情中..." /></LoadingDetailContainer>}
       {!isModalLoading && selectedProduct && (
         <ProductDetailModal 
           product={selectedProduct}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Form, Input, Button, DatePicker, Spin } from 'antd';
 import { Container, Heading } from '../styles/styles';
+import { LoadingUserContainer, DatePickerStyle } from '../styles/userProfileStyles';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import dayjs from 'dayjs';
@@ -74,10 +75,10 @@ function UserProfilePage() {
 
   if (loading) {
     return (
-      <Container style={{ textAlign: 'center', paddingTop: '50px' }}>
+      <LoadingUserContainer>
         <Spin size="large" />
         <p>正在載入用戶資料...</p>
-      </Container>
+      </LoadingUserContainer>
     );
   }
 
@@ -117,7 +118,7 @@ function UserProfilePage() {
             name="birth"
             label="生日"
           >
-            <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+                            <DatePicker style={DatePickerStyle} format="YYYY-MM-DD" />
           </Form.Item>
 
           <Form.Item

@@ -27,6 +27,16 @@ import {
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
+import {
+  LoadingContainer,
+  LoadingTitle,
+  ErrorContainer,
+  StatisticRowStyle,
+  SmallTextStyle,
+  ModalLoadingContainer,
+  LoadingDetailText,
+  FullWidthVerticalSpace
+} from '../styles/pageStyles';
 
 const { Title, Text } = Typography;
 
@@ -296,23 +306,23 @@ function PurchaseHistoryPage() {
   // 載入中狀態
   if (loading) {
     return (
-      <Container style={{ textAlign: 'center', padding: '50px' }}>
+      <LoadingContainer>
         <Spin size="large" />
-        <Typography.Title level={3} style={{ marginTop: '20px' }}>
+        <LoadingTitle>
           載入購買紀錄中...
-        </Typography.Title>
-      </Container>
+        </LoadingTitle>
+      </LoadingContainer>
     );
   }
   
   // 錯誤狀態
   if (error && orders.length === 0) {
     return (
-      <Container style={{ textAlign: 'center', padding: '50px' }}>
+      <ErrorContainer>
         <Typography.Title level={3} type="danger">
           載入購買紀錄時發生錯誤: {error}
         </Typography.Title>
-      </Container>
+      </ErrorContainer>
     );
   }
   
@@ -321,7 +331,7 @@ function PurchaseHistoryPage() {
       <Heading>購買紀錄查詢</Heading>
       
       {/* 統計卡片 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+      <Row gutter={[16, 16]} style={StatisticRowStyle}>
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
@@ -332,7 +342,7 @@ function PurchaseHistoryPage() {
               valueStyle={{ color: '#1890ff' }}
             />
             {statistics.cancelled_orders > 0 && (
-              <Text type="secondary" style={{ fontSize: '12px' }}>
+              <Text type="secondary" style={SmallTextStyle}>
                 (含 {statistics.cancelled_orders} 筆已取消)
               </Text>
             )}
@@ -347,7 +357,7 @@ function PurchaseHistoryPage() {
               suffix="元"
               valueStyle={{ color: '#52c41a' }}
             />
-            <Text type="secondary" style={{ fontSize: '12px' }}>
+            <Text type="secondary" style={SmallTextStyle}>
               (排除已取消訂單)
             </Text>
           </Card>
@@ -361,7 +371,7 @@ function PurchaseHistoryPage() {
               suffix="種"
               valueStyle={{ color: '#722ed1' }}
             />
-            <Text type="secondary" style={{ fontSize: '12px' }}>
+            <Text type="secondary" style={SmallTextStyle}>
               (排除已取消訂單)
             </Text>
           </Card>
@@ -433,10 +443,10 @@ function PurchaseHistoryPage() {
         destroyOnClose
       >
         {detailLoading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
+          <ModalLoadingContainer>
             <Spin size="large" />
-            <div style={{ marginTop: '16px' }}>載入訂單詳情中...</div>
-          </div>
+            <LoadingDetailText>載入訂單詳情中...</LoadingDetailText>
+          </ModalLoadingContainer>
         ) : selectedOrder && selectedOrder.length > 0 ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* 訂單基本資訊 */}

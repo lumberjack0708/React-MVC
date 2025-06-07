@@ -66,6 +66,24 @@ const OrderManagement = () => {
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
+    // 如果是要取消訂單，先顯示確認對話框
+    if (newStatus === 'cancelled') {
+      Modal.confirm({
+        title: '確認取消訂單',
+        content: `您確定要取消訂單 #${orderId} 嗎？此操作無法復原。`,
+        okText: '確認取消',
+        cancelText: '保持原狀',
+        okType: 'danger',
+        onOk: () => updateOrderStatus(orderId, newStatus),
+      });
+      return;
+    }
+    
+    // 其他狀態直接更新
+    updateOrderStatus(orderId, newStatus);
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
     setLoading(true);
     try {
       const url = getApiUrl('updateOrderStatus');

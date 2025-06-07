@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Heading } from '../styles/styles';
+import { Container } from '../styles/styles';
 import { NotFoundCardStyle } from '../styles/notFoundStyles';
 import { Card, Button, Typography, Result } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';

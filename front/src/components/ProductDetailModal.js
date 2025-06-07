@@ -11,7 +11,7 @@ import {
 } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
 
-const { Title, Paragraph } = Typography;
+const { Paragraph } = Typography;
 
 /**
  * @function ProductDetailModal
@@ -22,14 +22,12 @@ const { Title, Paragraph } = Typography;
 
 // 產品詳情模態對話框組件
 function ProductDetailModal({ product, onClose, onAddToCart }) {
-  // 產品類別中文名稱映射
   const categoryNames = {
     food: '食品',
     toy: '玩具',
     accessories: '配件'
   };
   
-  // 產品描述映射
   const productDescriptions = {
     '高級貓糧': '採用天然食材，富含多種營養元素，適合各階段的貓咪食用。特別添加牛磺酸和omega-3脂肪酸，有助於貓咪的眼睛和心臟健康。',
     '寵物自動飲水機': '創新設計，保持水的新鮮流動，鼓勵寵物多喝水。配備靜音水泵和濾網系統，確保寵物飲用的水質乾淨衛生。',
@@ -39,7 +37,6 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
     '貓砂盆': '半封閉式設計，減少貓砂散落。底部附有過濾網，方便清理貓砂。優質PP材質，堅固耐用，易於清洗。'
   };
   
-  // 產品規格映射
   const productSpecs = {
     '高級貓糧': '3kg/包',
     '寵物自動飲水機': '容量: 2L',

@@ -1,5 +1,3 @@
-import styled from '@emotion/styled';
-
 // 404 頁面樣式
 
 // 404 頁面卡片樣式

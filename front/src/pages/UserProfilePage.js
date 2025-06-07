@@ -1,19 +1,17 @@
 /* global axios, Qs */
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Form, Input, Button, DatePicker, Spin } from 'antd';
+import { Card, Form, Input, Button, DatePicker, Spin } from 'antd';
 import { Container, Heading } from '../styles/styles';
 import { LoadingUserContainer, DatePickerStyle } from '../styles/userProfileStyles';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import dayjs from 'dayjs';
 
-const { Title } = Typography;
-
 function UserProfilePage() {
   const { notify } = useNotification();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(1); // 暫時寫死用戶 ID 為 1
+  const userId = 1; // 暫時寫死用戶 ID 為 1
 
   useEffect(() => {
     const fetchUserData = async () => {

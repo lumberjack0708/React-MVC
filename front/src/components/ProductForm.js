@@ -8,7 +8,7 @@ const { Option } = Select;
 const ProductForm = ({ form, initialValues }) => {
   useEffect(() => {
     // 當 initialValues 更新時，重設表單欄位
-    // 這也包括了當從編輯模式切換到新增模式時，initialValues 會變成 null
+    // 從編輯模式切換到新增模式時，initialValues 會變成 null
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,

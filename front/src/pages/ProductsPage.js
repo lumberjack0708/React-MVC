@@ -5,10 +5,8 @@ import { addToCart } from '../store/cartSlice';
 import { getApiUrl, API_CONFIG } from '../config';
 import { useNotification } from '../components/Notification';
 import ProductDetailModal from '../components/ProductDetailModal';
-// 引入 Ant Design 元件
 import { Row, Col, Card, Typography, Button, Select, Space, Statistic, Badge, Radio, Tooltip, Spin } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined, FilterOutlined, SortAscendingOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
-// 引入保留的 Emotion 樣式組件
 import { Container, Heading } from '../styles/styles';
 import {
   LoadingContainer,
@@ -24,7 +22,7 @@ import {
 } from '../styles/pageStyles';
 import { getProductImage } from '../assets/images/index';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 /**
@@ -36,7 +34,7 @@ const { Option } = Select;
 function ProductsPage() {
   const { notify } = useNotification();
   
-  const dispatch = useDispatch(); // 使用 Redux dispatch
+  const dispatch = useDispatch();  // Redux dispatch
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,8 +88,6 @@ function ProductsPage() {
       const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({ pid: productId }));
       if (response.data && response.data.status === 200 && response.data.result.length > 0) {
         const p_detail = response.data.result[0];
-        // 假設單一產品查詢也返回 pid, p_name 等 (或 product_id 如果後端修正了 SQL 且返回的是 product_id)
-        // 若後端 getProduct($pid) 返回的是 product_id, 這裡的 id 也應對應調整
         const detailedProduct = {
           id: p_detail.product_id,
           name: p_detail.name,

@@ -1,50 +1,14 @@
 /* global axios, Qs */
 import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Card, 
-  Typography, 
-  Tag, 
-  Space, 
-  Spin, 
-  Empty, 
-  Statistic, 
-  Row, 
-  Col,
-  Button,
-  Modal,
-  Descriptions,
-  Popconfirm
-} from 'antd';
-import { 
-  ShoppingOutlined, 
-  CalendarOutlined, 
-  DollarOutlined,
-  EyeOutlined,
-  ShoppingCartOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
+import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm} from 'antd';
+import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
-import {
-  LoadingContainer,
-  LoadingTitle,
-  ErrorContainer,
-  StatisticRowStyle,
-  SmallTextStyle,
-  ModalLoadingContainer,
-  LoadingDetailText,
-  FullWidthVerticalSpace
-} from '../styles/pageStyles';
+import {LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText} from '../styles/pageStyles';
 
 const { Title, Text } = Typography;
 
-/**
- * @function PurchaseHistoryPage
- * @description 購買紀錄查詢頁面，顯示用戶的所有訂單記錄
- * @returns {JSX.Element} 返回購買紀錄頁面的 JSX 結構
- */
 function PurchaseHistoryPage() {
   const { notify } = useNotification();
   
@@ -63,7 +27,7 @@ function PurchaseHistoryPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   
   // 模擬用戶ID（實際應用中應該從認證系統獲取）
-  const currentUserId = 1; // 這裡暫時使用固定值，實際應該從用戶登入狀態獲取
+  const currentUserId = 1; // 這裡暫時寫死，實際應該從用戶登入狀態獲取
   
   // 載入購買紀錄和統計數據
   useEffect(() => {
@@ -168,12 +132,12 @@ function PurchaseHistoryPage() {
     }
   };
   
-  // 判斷訂單是否可以取消
+  // 判斷訂單是否可以取消(待處理、處理中才可以取消)
   const canCancelOrder = (status) => {
     return status === 'pending' || status === 'processing';
   };
   
-  // 訂單狀態顏色映射
+  // 訂單狀態顏色
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'gold';

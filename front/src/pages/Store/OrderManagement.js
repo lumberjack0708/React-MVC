@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Tag, Space, Typography, notification, Select, Button, Modal } from 'antd';
 import { getApiUrl } from '../../config';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 const OrderManagement = () => {

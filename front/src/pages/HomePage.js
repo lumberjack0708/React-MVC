@@ -18,7 +18,7 @@ import {
   RecommendedProductTitle,
   RecommendedProductPriceStyle
 } from '../styles/homePageStyles';
-import { Card, Button, Typography, Row, Col, Spin, Space, Statistic } from 'antd';
+import { Card, Button, Typography, Row, Col, Spin, Statistic } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { getProductImage } from '../assets/images/index';
 

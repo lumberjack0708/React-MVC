@@ -1,3 +1,4 @@
+/* global axios, Qs */
 // 匯入 React 相關 Hooks，如 useState
 import React, { useState } from 'react';
 // 匯入 useNavigate Hook，用於編程式導航
@@ -13,6 +14,8 @@ import {
 } from '../store/cartSlice';
 // 匯入自定義的 useNotification Hook，用於顯示通知
 import { useNotification } from '../components/Notification';
+// 匯入 API 配置
+import { getApiUrl } from '../config';
 // 匯入 Ant Design 元件
 import { Card, Button, Typography, Space, Row, Col, Statistic, Divider, Empty } from 'antd';
 import { ShoppingOutlined, MinusOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -42,10 +45,13 @@ function CartPage() {
   // 使用 useNotification Hook 獲取顯示通知的函數
   const { notify } = useNotification();
   
-  // loading 狀態用於表示數據是否正在載入 (在此範例中未使用，但為常見模式)
+  // loading 狀態用於表示數據是否正在載入
   const [loading, setLoading] = useState(false);
-  // error 狀態用於存儲載入數據時發生的錯誤 (在此範例中未使用)
+  // error 狀態用於存儲載入數據時發生的錯誤
   const [error, setError] = useState(null);
+  
+  // 模擬當前用戶ID（實際應用中應該從認證系統獲取）
+  const currentUserId = 1;
   
   /**
    * @function handleUpdateQuantity
@@ -73,24 +79,74 @@ function CartPage() {
   /**
    * @function handleCheckout
    * @description 處理結帳操作。
-   *              如果購物車為空，則顯示警告通知。
-   *              否則，顯示訂單摘要的彈出視窗，然後清空購物車。
+   *              呼叫後端 newOrder API 建立訂單。
    */
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     // 檢查購物車是否為空
     if (cartItems.length === 0) {
       // 如果購物車為空，顯示警告通知並返回
       notify.warning('購物車是空的', '請先添加商品到購物車');
       return;
     }
-    // 準備訂單資訊字串，用於在彈出視窗中顯示
-    const orderInfo = cartItems.map(item => `${item.name} x ${item.quantity} = $${item.price * item.quantity}`).join('\n');
-    // 組合完整的訂單確認訊息
-    const message = `訂單已成立！\n\n商品明細：\n${orderInfo}\n\n總金額：$${totalPrice}\n\n感謝您的購買！`;
-    // 使用瀏覽器的 alert 函數顯示訂單確認訊息
-    alert(message);
-    // 清空購物車
-    dispatch(clearCart());
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 準備 API 請求參數
+      const productsId = cartItems.map(item => item.id);
+      const quantities = cartItems.map(item => item.quantity);
+      
+      const requestData = {
+        account_id: currentUserId,
+        products_id: productsId,
+        quantity: quantities
+      };
+
+      // 呼叫後端 newOrder API
+      const response = await axios.post(
+        getApiUrl('newOrder'), 
+        Qs.stringify(requestData)
+      );
+
+      if (response.data && response.data.status === 200) {
+        // 訂單建立成功
+        const orderId = response.data.order_id;
+        
+        // 準備訂單資訊字串，用於顯示確認訊息
+        const orderInfo = cartItems.map(item => 
+          `${item.name} x ${item.quantity} = $${item.price * item.quantity}`
+        ).join('\n');
+        
+        // 組合完整的訂單確認訊息
+        const message = `訂單已成立！\n\n訂單編號：#${orderId}\n\n商品明細：\n${orderInfo}\n\n總金額：$${totalPrice}\n\n感謝您的購買！`;
+        
+        // 顯示成功通知
+        notify.success('訂單建立成功', `訂單編號：#${orderId}`);
+        
+        // 使用瀏覽器的 alert 函數顯示訂單確認訊息
+        alert(message);
+        
+        // 清空購物車
+        dispatch(clearCart());
+        
+        // 導航到購買紀錄頁面
+        navigate('/purchase-history');
+        
+      } else {
+        // 處理 API 回傳的錯誤
+        throw new Error(response.data.message || '建立訂單失敗');
+      }
+      
+    } catch (err) {
+      // 處理錯誤
+      const errorMessage = err.response?.data?.message || err.message || '建立訂單時發生未知錯誤';
+      setError(errorMessage);
+      notify.error('訂單建立失敗', errorMessage);
+      console.error("建立訂單失敗:", err);
+    } finally {
+      setLoading(false);
+    }
   };
   
   // 返回購物車頁面的 JSX 結構
@@ -101,9 +157,9 @@ function CartPage() {
       
       {/* 根據載入、錯誤和購物車狀態顯示不同的內容 */}
       {loading ? (
-        <p>載入中...</p>
+        <p>處理中...</p>
       ) : error ? (
-        <p>{error}</p>
+        <p style={{ color: 'red' }}>{error}</p>
       // 如果購物車為空，顯示提示訊息和繼續購物的按鈕
       ) : cartItems.length === 0 ? (
         <Card>
@@ -170,6 +226,7 @@ function CartPage() {
               type="primary" 
               size="large"
               block
+              loading={loading}
               onClick={handleCheckout}
             >
               結帳

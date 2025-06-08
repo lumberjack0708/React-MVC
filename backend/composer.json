@@ -1,8 +1,9 @@
 {
     "autoload": {
       "psr-4": {
-          "app\\": "app/",
-          "vendor\\": "vendor/"
+            "Controllers\\": "app/Controllers/",
+            "Models\\": "app/Models/",
+            "Middlewares\\": "app/Middlewares/"
       }
     },
     "require": {

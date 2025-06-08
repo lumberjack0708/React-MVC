@@ -1,4 +1,10 @@
 <?php
+// JWT 相關路由
+include_once '../jwt/login.php';     // 登入
+include_once '../jwt/check.php';     // 驗證
+include_once '../jwt/genToken.php';  // 產生Token
+
+
 // $router->register(action: 'getUsers', class: 'Employee', method: 'getUsers');
 // $router->register(action: 'newUser', class: 'Employee', method: 'newUser');
 // $router->register(action: 'removeUser', class: 'Employee', method: 'removeUser');

@@ -22,7 +22,7 @@ $router->register(action: 'newSupplier', class: 'Supplier', method: 'newSupplier
 $router->register(action: 'removeSupplier', class: 'Supplier', method:'removeSupplier');
 $router->register(action: 'updateSupplier', class: 'Supplier', method:'updateSupplier');
 
-// 使用者帳戶資料相關路由 (已更新為 Account class)
+// 使用者帳戶資料相關路由 (Account)
 $router->register(action: 'getUsers', class: 'Account', method: 'getUsers');
 $router->register(action: 'newUser', class: 'Account', method: 'newUser');
 $router->register(action: 'removeUser', class: 'Account', method: 'removeUser');

@@ -28,6 +28,7 @@ import 'normalize.css';
 // 引入新的工具函式
 import Request from './utils/Request';
 import { getToken, removeToken, setToken } from './utils/auth';
+import { getApiUrl } from './config';
 
 const { Header, Content } = Layout;
 
@@ -59,31 +60,39 @@ function AppContent() {
     else if (path.includes('/cart')) setCurrent('cart');
     else if (path.includes('/store')) setCurrent('store');
 
-    // === 新增：App 啟動時檢查 Token ===
+    // === 修正：App 啟動時檢查 Token ===
     const checkAuth = async () => {
-      const token = getToken();
-      if (!token) {
+      const authToken = getToken();
+      if (!authToken) {
         setIsAuthChecking(false);
         return;
       }
 
       try {
-        // 直接使用 Request，它已經包含了 token
-        const res = await Request().get(''); // 使用 GET 請求驗證 token
+        // 使用一個實際存在的 API 來驗證 token（如獲取產品列表）
+        const res = await Request().post(getApiUrl('getProducts'), '');
         const response = res.data;
         if (response.status === 200) {
           // Token 有效，更新 token 和使用者狀態
-          setToken(response.token);
-          setUser(response.user);
+          if (response.token) {
+            setToken(response.token);
+          }
+          if (response.user) {
+            setUser(response.user);
+          }
           setIsLoggedIn(true);
         } else {
           // Token 無效或過期
           removeToken();
+          setIsLoggedIn(false);
+          setUser(null);
         }
       } catch (error) {
-        // API 請求失敗
+        // API 請求失敗，清除認證狀態
         console.error('認證檢查失敗:', error);
         removeToken();
+        setIsLoggedIn(false);
+        setUser(null);
       } finally {
         setIsAuthChecking(false); // 結束檢查
       }
@@ -149,6 +158,8 @@ function AppContent() {
     setUser(null);
     setIsLoggedIn(false);
     console.log('用戶已登出');
+    // 導航到首頁
+    navigate('/');
   };
 
   // 新增：如果正在檢查認證，可以顯示一個 Loading 畫面
@@ -273,9 +284,9 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
-            <Route path="/purchase-history" element={<PurchaseHistoryPage />} />
+            <Route path="/purchase-history" element={<PurchaseHistoryPage user={user} />} />
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/user-profile" element={<UserProfilePage />} />
+            <Route path="/user-profile" element={<UserProfilePage user={user} />} />
             {/* 店家管理路由 */}
             <Route path="/store" element={<StoreLayout />}>
               <Route path="products" element={<ProductManagement />} />

@@ -1,29 +1,32 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, DatePicker, Spin, message } from 'antd';
+import { Card, Form, Input, Button, DatePicker, Spin, message, Result } from 'antd';
 import { Container, Heading } from '../styles/styles';
 import { LoadingUserContainer, DatePickerStyle } from '../styles/userProfileStyles';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import dayjs from 'dayjs';
 import Request from '../utils/Request';
+import { getToken } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
 
-function UserProfilePage() {
+function UserProfilePage({ user }) {
   const { notify } = useNotification();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
-  const userId = 1; // 暫時寫死用戶 ID 為 1
+  const token = getToken();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!userId) {
+      if (!user || !user.account_id) {
         message.error('無法獲取用戶 ID，請重新登入');
         setLoading(false);
         return;
       }
 
       try {
-        const response = await Request().post(getApiUrl('getUsers'), Qs.stringify({ uid: userId }));
+        const response = await Request().post(getApiUrl('getUsers'), Qs.stringify({ uid: user.account_id }));
         if (response.data.status === 200 && response.data.result.length > 0) {
           const userData = response.data.result[0];
           if (userData.birth) {
@@ -43,15 +46,20 @@ function UserProfilePage() {
       }
     };
 
-    fetchUserData();
-  }, [userId, form, notify]);
+    if (user) {
+      fetchUserData();
+    } else {
+      setLoading(false);
+    }
+  }, [user, form, notify]);
 
   const onFinish = async (values) => {
+    if (!user) return;
+    
     setLoading(true);
-    const userId = 1; // 同上，應動態獲取
     
     const dataToUpdate = {
-      uid: userId,
+      uid: user.account_id,
       name: values.full_name,
       addr: values.addr,
       bir: values.birth ? values.birth.format('YYYY-MM-DD') : null,
@@ -78,6 +86,22 @@ function UserProfilePage() {
     console.log('表單驗證失敗:', errorInfo);
     notify.error('失敗', '請檢查表單欄位！');
   };
+
+  // 未登入時顯示提示頁
+  if (!token || !user) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="warning"
+            title="尚未登入"
+            subTitle="您沒有權限查看個人資料，請先登入。"
+            extra={<Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>}
+          />
+        </Card>
+      </Container>
+    );
+  }
 
   if (loading) {
     return (

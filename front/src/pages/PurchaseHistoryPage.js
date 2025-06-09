@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
-function PurchaseHistoryPage() {
+function PurchaseHistoryPage({ user }) {
   const { notify } = useNotification();
   const navigate = useNavigate();
   const token = getToken();
@@ -32,8 +32,8 @@ function PurchaseHistoryPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
-    // 未登入時不進行資料請求
-    if (!token) {
+    // 如果沒有用戶資訊或 token，不進行資料請求
+    if (!token || !user) {
       setLoading(false);
       return;
     }
@@ -43,8 +43,8 @@ function PurchaseHistoryPage() {
       setError(null);
       try {
         const [ordersResponse, statsResponse] = await Promise.all([
-          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: 2 })),
-          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: 2 }))
+          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: user.account_id })),
+          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: user.account_id }))
         ]);
         
         if (ordersResponse.data.status === 200) {
@@ -69,7 +69,7 @@ function PurchaseHistoryPage() {
     };
     
     fetchData();
-  }, [notify, token]);
+  }, [notify, token, user]);
   
   // 查看訂單詳情
   const handleViewOrderDetail = async (orderId) => {
@@ -104,22 +104,23 @@ function PurchaseHistoryPage() {
   
   // 取消訂單
   const handleCancelOrder = async (orderId) => {
-    const currentUserId = 2; 
+    if (!user) return;
+    
     setLoading(true);
     try {
       const response = await Request().post(
         getApiUrl('removeOrder'),
         Qs.stringify({
           order_id: orderId,
-          account_id: currentUserId
+          account_id: user.account_id
         })
       );
       if (response.data.status === 200) {
         message.success(response.data.message || '訂單已成功取消');
         // 重新獲取數據
         const [ordersResponse, statsResponse] = await Promise.all([
-          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: currentUserId })),
-          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: currentUserId }))
+          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: user.account_id })),
+          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: user.account_id }))
         ]);
         setOrders(ordersResponse.data.result || []);
         setStatistics(statsResponse.data.result || {});
@@ -266,7 +267,22 @@ function PurchaseHistoryPage() {
       render: (text) => `NT$ ${parseInt(text, 10)}`
     }
   ];
-  
+
+  // 未登入時顯示提示頁
+  if (!token || !user) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="warning"
+            title="尚未登入"
+            subTitle="您沒有權限查看購物紀錄，請先登入。"
+            extra={<Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>}
+          />
+        </Card>
+      </Container>
+    );
+  }
   
   // 載入中狀態
   if (loading) {
@@ -288,22 +304,6 @@ function PurchaseHistoryPage() {
           載入購買紀錄時發生錯誤: {error}
         </Typography.Title>
       </ErrorContainer>
-    );
-  }
-  
-  // 未登入時顯示提示頁，放在 hooks 之後即可避免規則警告
-  if (!token) {
-    return (
-      <Container>
-        <Card>
-          <Result
-            status="warning"
-            title="尚未登入"
-            subTitle="您沒有權限查看購物紀錄，請先登入。"
-            extra={<Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>}
-          />
-        </Card>
-      </Container>
     );
   }
   

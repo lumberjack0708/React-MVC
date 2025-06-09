@@ -1,10 +1,10 @@
 export default function startPage(){
     const sp = `
-        帳號：<input type="text" id="id"><br>
-        密碼：<input type="password" id="password"><br>
-        <button id="login">登入</button>
-        <button id="checkToken">檢查</button>
+        <button id="employee" class="custom-btn">員工資料</button>
+        <button id="product" class="custom-btn">產品資料</button>
+        <button id="role" class="custom-btn">角色</button>
+        <button id="supplier" class="custom-btn">供應商資訊</button>
         <div id="content"></div>
-    `;
+    `;  
     return sp;
 }

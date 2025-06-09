@@ -1,17 +1,38 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm, message } from 'antd';
+import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm, message, Result } from 'antd';
 import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
 import {LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText} from '../styles/pageStyles';
 import Request from '../utils/Request';
+import { getToken } from '../utils/auth';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
 function PurchaseHistoryPage() {
   const { notify } = useNotification();
+  const navigate = useNavigate();
+  const token = getToken();
+
+  if (!token) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="warning"
+            title="尚未登入"
+            subTitle="您沒有權限查看購物紀錄，請先登入。"
+            extra={
+              <Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>
+            }
+          />
+        </Card>
+      </Container>
+    );
+  }
   
   // 狀態管理
   const [orders, setOrders] = useState([]);

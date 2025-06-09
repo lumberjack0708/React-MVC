@@ -4,6 +4,7 @@ import { Modal, Form, Input, Button, message, Divider } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import Request from '../utils/Request';
 import { setToken } from '../utils/auth';
+import { getApiUrl } from '../config';
 
 const LoginModal = ({ visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
@@ -17,7 +18,7 @@ const LoginModal = ({ visible, onCancel, onSuccess }) => {
     };
 
     try {
-      const res = await Request().post('?action=doLogin', Qs.stringify(postData));
+      const res = await Request().post(getApiUrl('doLogin'), Qs.stringify(postData));
       const response = res.data;
 
       if (response.status === 200) {

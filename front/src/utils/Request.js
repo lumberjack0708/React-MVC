@@ -1,5 +1,5 @@
 /* global axios */
-import { getToken } from './auth';
+import { getToken, setToken } from './auth';
 import { API_CONFIG } from '../config';
 
 /**
@@ -8,14 +8,28 @@ import { API_CONFIG } from '../config';
  * @returns {axios.AxiosInstance}
  */
 const Request = () => {
-  const token = getToken();
-
   const instance = axios.create({
     baseURL: API_CONFIG.baseURL,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Auth: token || '',
     },
+  });
+
+  instance.interceptors.request.use((config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Auth = token;
+    } else {
+      delete config.headers.Auth;
+    }
+    return config;
+  });
+
+  instance.interceptors.response.use((response) => {
+    if (response.data && response.data.token) {
+      setToken(response.data.token);
+    }
+    return response;
   });
 
   return instance;

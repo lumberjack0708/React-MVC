@@ -1,11 +1,11 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm, message, Result } from 'antd';
+import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col, Button, Modal, Descriptions, Popconfirm, message, Result } from 'antd';
 import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
-import {LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText} from '../styles/pageStyles';
+import { LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText } from '../styles/pageStyles';
 import Request from '../utils/Request';
 import { getToken } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
@@ -17,39 +17,27 @@ function PurchaseHistoryPage() {
   const navigate = useNavigate();
   const token = getToken();
 
-  if (!token) {
-    return (
-      <Container>
-        <Card>
-          <Result
-            status="warning"
-            title="尚未登入"
-            subTitle="您沒有權限查看購物紀錄，請先登入。"
-            extra={
-              <Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>
-            }
-          />
-        </Card>
-      </Container>
-    );
-  }
-  
   // 狀態管理
   const [orders, setOrders] = useState([]);
   const [statistics, setStatistics] = useState({
     total_orders: 0,
     cancelled_orders: 0,
     total_amount: 0,
-    total_items: 0
+    total_items: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  
-  // 載入購買紀錄和統計數據
+
   useEffect(() => {
+    // 未登入時不進行資料請求
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -81,7 +69,7 @@ function PurchaseHistoryPage() {
     };
     
     fetchData();
-  }, [notify]);
+  }, [notify, token]);
   
   // 查看訂單詳情
   const handleViewOrderDetail = async (orderId) => {
@@ -300,6 +288,22 @@ function PurchaseHistoryPage() {
           載入購買紀錄時發生錯誤: {error}
         </Typography.Title>
       </ErrorContainer>
+    );
+  }
+  
+  // 未登入時顯示提示頁，放在 hooks 之後即可避免規則警告
+  if (!token) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="warning"
+            title="尚未登入"
+            subTitle="您沒有權限查看購物紀錄，請先登入。"
+            extra={<Button type="primary" onClick={() => navigate('/')}>返回首頁</Button>}
+          />
+        </Card>
+      </Container>
     );
   }
   

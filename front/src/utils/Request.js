@@ -1,4 +1,4 @@
-import axios from 'axios';
+/* global axios */
 import { getToken } from './auth';
 import { API_CONFIG } from '../config';
 
@@ -14,7 +14,7 @@ const Request = () => {
     baseURL: API_CONFIG.baseURL,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Auth': token || '', // 如果沒有 token，也傳送一個空的 Auth 標頭
+      Auth: token || '',
     },
   });
 

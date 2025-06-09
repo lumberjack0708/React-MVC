@@ -10,12 +10,17 @@ import { API_CONFIG } from '../config';
 const Request = () => {
   const token = getToken();
 
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+
+  if (token) {
+    headers.Auth = token;
+  }
+
   const instance = axios.create({
     baseURL: API_CONFIG.baseURL,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Auth: token || '',
-    },
+    headers,
   });
 
   return instance;

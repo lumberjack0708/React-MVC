@@ -4,9 +4,9 @@
     
     $response = array();
     
-    // 檢查是否有POST資料 (只使用 account_code 登入)
-    if(isset($_POST['id']) && isset($_POST['password'])) {
-        $id = $_POST['id'];
+    // 檢查是否有POST資料 (使用 account_code 登入)
+    if(isset($_POST['account_code']) && isset($_POST['password'])) {
+        $account_code = $_POST['account_code'];
         $password = $_POST['password'];
         
         // 查詢DB驗證帳密的正確性
@@ -23,9 +23,9 @@
             $response["message"] = "資料庫連線失敗";
             $response["error_details"] = $conn->connect_error;
         } else {
-            // 只用 account_code 登入
+            // 使用 account_code 登入
             $stmt = $conn->prepare("SELECT * FROM account WHERE account_code = ? AND password = ?");
-            $stmt->bind_param("ss", $id, $password);
+            $stmt->bind_param("ss", $account_code, $password);
             $stmt->execute();
             $result = $stmt->get_result();
             
@@ -60,7 +60,7 @@
         // 缺少必要參數
         http_response_code(400);
         $response["status"] = 400;
-        $response["message"] = "缺少必要參數";
+        $response["message"] = "缺少必要參數 (account_code, password)";
     }
     
     // 輸出JSON格式回應

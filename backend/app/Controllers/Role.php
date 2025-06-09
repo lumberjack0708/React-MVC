@@ -1,8 +1,8 @@
 <?php
-namespace app\Controllers;
-use vendor\DB;
-use vendor\Controller;
-use app\Models\Role as RoleModel;
+namespace Controllers;
+use Vendor\DB;
+use Vendor\Controller;
+use Models\Role as RoleModel;
 
 class Role extends Controller
 {

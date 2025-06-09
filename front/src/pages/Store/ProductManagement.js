@@ -1,9 +1,11 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, notification, Modal, Form, Popconfirm } from 'antd';
+import { Table, Button, Space, Typography, notification, Modal, Form, Popconfirm, message } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
 import { getProductImage } from '../../assets/images'; // 匯入獲取圖片的函數
 import ProductForm from '../../components/ProductForm'; // 匯入表單組件
+import Request from '../../utils/Request';
+// 移除未使用的圖示匯入
 
 const { Title } = Typography;
 
@@ -17,17 +19,10 @@ const ProductManagement = () => {
   // 獲取商品列表
   const fetchProducts = async () => {
     setLoading(true);
+    const url = getApiUrl('getProducts');
     try {
-      const url = getApiUrl('getProducts');
-      const response = await axios.get(url);
-      if (response.data.status === 200) {
-        setProducts(response.data.result);
-      } else {
-        notification.error({
-          message: '讀取失敗',
-          description: response.data.message || '無法獲取商品列表，請稍後再試。',
-        });
-      }
+      const response = await Request().get(url);
+      setProducts(response.data.result);
     } catch (error) {
       notification.error({
         message: '請求錯誤',
@@ -64,75 +59,62 @@ const ProductManagement = () => {
     form.resetFields();
   };
 
-  const handleOk = () => {
-    form
-      .validateFields()
-      .then(async (values) => {
-        setLoading(true);
-        const isEditing = !!editingProduct;
-        const url = getApiUrl(isEditing ? 'updateProduct' : 'newProduct');
-        
-        // 使用 FormData 來處理包含檔案的上傳
-        const formData = new FormData();
-        formData.append('p_name', values.name);
-        formData.append('price', values.price);
-        formData.append('stock', values.stock);
-        formData.append('category', values.category);
-
-        if (isEditing) {
-          formData.append('pid', editingProduct.product_id);
-        }
-
-        // 檢查是否有新的圖片檔案被上傳
-        if (values.image && values.image.length > 0 && values.image[0].originFileObj) {
-          formData.append('image', values.image[0].originFileObj);
-        }
-
-        try {
-          const response = await axios.post(url, formData);
-
-          if (response.data.status === 200) {
-            notification.success({
-              message: isEditing ? '更新成功' : '新增成功',
-              description: `商品「${values.name}」已成功${isEditing ? '更新' : '新增'}。`,
-            });
-            handleCancel();
-            fetchProducts();
-          } else {
-            notification.error({
-              message: isEditing ? '更新失敗' : '新增失敗',
-              description: response.data.message || '操作失敗，請稍後再試。',
-            });
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields();
+      let url;
+      const formData = new FormData();
+      Object.keys(values).forEach(key => {
+        if (key === 'image') {
+          // 只處理有上傳檔案的情況
+          if (values.image && values.image[0] && values.image[0].originFileObj) {
+            formData.append('image', values.image[0].originFileObj);
           }
-        } catch (error) {
-          notification.error({
-            message: '請求錯誤',
-            description: '無法連接到伺服器，請檢查您的網路連線。',
-          });
-        } finally {
-          setLoading(false);
+        } else {
+          formData.append(key, values[key]);
         }
-      })
-      .catch((info) => {
-        console.log('Validate Failed:', info);
-        notification.error({
-          message: '表單驗證失敗',
-          description: '請檢查所有必填欄位是否已正確填寫。',
-        });
       });
+      
+      if (editingProduct) {
+        url = getApiUrl('updateProduct');
+        formData.append('pid', editingProduct.product_id);
+      } else {
+        url = getApiUrl('newProduct');
+      }
+
+      // 注意：使用 Request() 時，headers 已經預設，但上傳檔案需要 'multipart/form-data'
+      // 瀏覽器會自動處理 FormData 的 Content-Type，所以我們這裡不需要特別設定
+      const response = await Request().post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      
+      if (response.data.status === 200) {
+        message.success(`商品${editingProduct ? '更新' : '新增'}成功`);
+        handleCancel();
+        fetchProducts();
+      } else {
+        notification.error({
+          message: editingProduct ? '更新失敗' : '新增失敗',
+          description: response.data.message || '操作失敗，請稍後再試。',
+        });
+      }
+    } catch (error) {
+      notification.error({
+        message: '請求錯誤',
+        description: '無法連接到伺服器，請檢查您的網路連線。',
+      });
+    }
   };
 
   const handleDelete = async (productId) => {
-    setLoading(true);
+    const url = getApiUrl('removeProduct');
+    const data = { pid: productId };
     try {
-      const url = getApiUrl('removeProduct');
-      const data = Qs.stringify({ pid: productId });
-      const response = await axios.post(url, data);
+      const response = await Request().post(url, Qs.stringify(data));
       if (response.data.status === 200) {
-        notification.success({
-          message: '刪除成功',
-          description: '商品已成功刪除。',
-        });
+        message.success('商品刪除成功');
         fetchProducts();
       } else {
         notification.error({
@@ -145,8 +127,6 @@ const ProductManagement = () => {
         message: '請求錯誤',
         description: '無法連接到伺服器。',
       });
-    } finally {
-      setLoading(false);
     }
   };
 

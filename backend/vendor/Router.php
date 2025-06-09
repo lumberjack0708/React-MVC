@@ -1,5 +1,5 @@
 <?php
-    namespace vendor;
+    namespace Vendor;
     class Router{
         private $routeTable;
         public function __construct(){
@@ -21,7 +21,7 @@
             
             $class = $this->routeTable[$action]['class'];
             $method = $this->routeTable[$action]['method'];
-            $class = "app\\Controllers\\" . $class;
+            $class = "Controllers\\" . $class;
             $controller = new $class();
             $response = $controller->$method();
             return $response;

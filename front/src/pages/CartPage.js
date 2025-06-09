@@ -1,22 +1,22 @@
-/* global axios, Qs */
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+/* global Qs */
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  updateQuantity, 
-  removeFromCart, 
   clearCart, 
+  removeFromCart, 
+  updateQuantity, 
   selectCartItems, 
   selectTotalPrice 
 } from '../store/cartSlice';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
-import { Card, Button, Typography, Space, Row, Col, Statistic, Divider, Empty } from 'antd';
+import { Card, Button, Typography, Space, Row, Col, Statistic, Divider, Empty, message } from 'antd';
 import { ShoppingOutlined, MinusOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Container, Heading } from '../styles/styles';
 import { CartItemRightContainerStyle, CartQuantityText } from '../styles/cartPageStyles';
+import Request from '../utils/Request';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 /**
  * @function CartPage
@@ -25,186 +25,162 @@ const { Title, Text } = Typography;
  * @returns {JSX.Element} 返回購物車頁面的 JSX 結構。
  */
 function CartPage() {
-  const navigate = useNavigate();
-  
   // 使用 Redux 選擇器獲取購物車狀態
   const cartItems = useSelector(selectCartItems);
   const totalPrice = useSelector(selectTotalPrice);
   
   const dispatch = useDispatch();   // 使用 dispatch 發送 Redux actions
-  
-  const { notify } = useNotification();  // 使用 useNotification Hook 獲取顯示通知的函數
-  
-  const [loading, setLoading] = useState(false);  // 讀取資料時的 loading 狀態
-  const [error, setError] = useState(null);  // 存儲載入數據時發生的錯誤
-  
-  const currentUserId = 1;  // 模擬當前用戶ID（還沒做!!!!）
+  const { notify } = useNotification(); // 取得通知顯示函數
   
   /**
-   * @function handleUpdateQuantity
-   * @description 處理更新購物車中商品數量的操作。
-   * @param {string} id - 要更新數量的商品 ID。
-   * @param {number} newQuantity - 商品的新數量。
-   */
-  const handleUpdateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    dispatch(updateQuantity({ id, quantity: newQuantity }));  // 發送 Redux action 更新購物車狀態
-  };
-  
-  /**
-   * @function handleRemoveItem
-   * @description 處理從購物車中移除商品的操作。
-   * @param {string} id - 要移除的商品 ID。
-   */
-  const handleRemoveItem = (id) => {
-    dispatch(removeFromCart(id));  // 發送 Redux action 移除商品
-  };
-
-  /**
-   * @function handleCheckout
-   * @description 處理結帳操作。
-   *              呼叫後端 newOrder API 建立訂單。
+   * 處理結帳按鈕點擊事件
+   * 呼叫後端 API 建立新訂單
    */
   const handleCheckout = async () => {
+    // 假設用戶ID為2，後續應從登入狀態獲取
+    const currentUserId = 2; 
+
     if (cartItems.length === 0) {
-      notify.warning('購物車是空的', '請先添加商品到購物車');
+      message.warning('您的購物車是空的！');
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const orderData = {
+      account_id: currentUserId,
+      products_id: cartItems.map(item => item.id),
+      quantity: cartItems.map(item => item.quantity)
+    };
 
     try {
-      const productsId = cartItems.map(item => item.id);
-      const quantities = cartItems.map(item => item.quantity);
-      
-      const requestData = {
-        account_id: currentUserId,
-        products_id: productsId,
-        quantity: quantities
-      };
-
-      // 呼叫後端 newOrder API
-      const response = await axios.post(
-        getApiUrl('newOrder'), 
-        Qs.stringify(requestData)
+      const response = await Request().post(
+        getApiUrl('newOrder'),
+        Qs.stringify(orderData, { arrayFormat: 'brackets' }) // 重要：後端PHP需要這種格式來解析陣列
       );
-
-      if (response.data && response.data.status === 200) {
-        const orderId = response.data.order_id;
-        
-        // 準備訂單資訊字串，用於顯示確認訊息
-        const orderInfo = cartItems.map(item => 
-          `${item.name} x ${item.quantity} = $${item.price * item.quantity}`
-        ).join('\n');
-        
-        const message = `訂單已成立！\n\n訂單編號：#${orderId}\n\n商品明細：\n${orderInfo}\n\n總金額：$${totalPrice}\n\n感謝您的購買！`;
-        
-        notify.success('訂單建立成功', `訂單編號：#${orderId}`);
-        
-        alert(message);
-        
-        dispatch(clearCart());    // 清空購物車
-        
-        navigate('/purchase-history');  // 導航到購買紀錄頁面
-        
+      if (response.data.status === 200) {
+        message.success('訂單已成功建立！');
+        dispatch(clearCart());
       } else {
-        throw new Error(response.data.message || '建立訂單失敗');
+        message.error(response.data.message || '建立訂單失敗');
       }
-      
-    } catch (err) {
-      // 處理錯誤
-      const errorMessage = err.response?.data?.message || err.message || '建立訂單時發生未知錯誤';
-      setError(errorMessage);
-      notify.error('訂單建立失敗', errorMessage);
-      console.error("建立訂單失敗:", err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('結帳失敗:', error);
+      message.error('網路錯誤或伺服器無回應');
     }
   };
-  
-  // 返回購物車頁面的 JSX 結構
+
+  /**
+   * 處理移除購物車商品
+   */
+  const handleRemoveItem = (productId) => {
+    dispatch(removeFromCart(productId));
+    notify.info('商品已移除', '商品已從購物車中移除');
+  };
+
+  /**
+   * 處理商品數量變更
+   */
+  const handleQuantityChange = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(productId);
+      return;
+    }
+    dispatch(updateQuantity({ id: productId, quantity: newQuantity }));
+  };
+
+  // 如果購物車為空，顯示空狀態
+  if (cartItems.length === 0) {
+    return (
+      <Container>
+        <Heading>購物車</Heading>
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="您的購物車是空的"
+          imageStyle={{ height: 60 }}
+        >
+          <Button type="primary" icon={<ShoppingOutlined />} href="/products">
+            去逛逛
+          </Button>
+        </Empty>
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <Heading>購物車</Heading>
       
-      {loading ? (
-        <p>處理中...</p>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : cartItems.length === 0 ? (
-        <Card>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="購物車是空的"
-          >
-            <Button 
-              type="primary" 
-              icon={<ShoppingOutlined />}
-              onClick={() => navigate('/products')}
-            >
-              繼續購物
-            </Button>
-          </Empty>
-        </Card>
-      // 如果購物車中有商品，則顯示商品列表和訂單摘要
-      ) : (
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* 遍歷購物車中的商品並為每個商品渲染一個卡片 */}
-          {cartItems.map(item => (
-            <Card key={item.id}>
-              <Row align="middle" justify="space-between">
-                <Col span={12}>
-                  <Title level={4}>{item.name}</Title>
-                  <Text>單價: ${item.price}</Text>
-                </Col>
-                <Col span={12} style={CartItemRightContainerStyle}>
-                  <Space>
-                    <Button 
-                      icon={<MinusOutlined />}
-                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                    />
-                    <CartQuantityText>{item.quantity}</CartQuantityText>
-                    <Button 
-                      icon={<PlusOutlined />}
-                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                    />
-                    <Button 
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleRemoveItem(item.id)}
-                    >
-                      移除
-                    </Button>
-                  </Space>
-                </Col>
-              </Row>
-            </Card>
-          ))}
-          
-          {/* 訂單摘要卡片 */}
-          <Card>
-            <Title level={3}>訂單摘要</Title>
-            <Divider />
-            <Statistic
-              title="總金額"
-              value={totalPrice}
-              precision={0}
-              prefix="$"
-            />
-            <Divider />
-            <Button 
-              type="primary" 
-              size="large"
-              block
-              loading={loading}
-              onClick={handleCheckout}
-            >
-              結帳
-            </Button>
+      <Row gutter={[24, 24]}>
+        {/* 左欄：商品列表 */}
+        <Col xs={24} lg={16}>
+          <Space direction="vertical" style={{ width: '100%' }} size="middle">
+            {cartItems.map((item) => (
+              <Card key={item.id} size="small">
+                <Row align="middle" gutter={16}>
+                  <Col flex="auto">
+                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                      <Typography.Title level={5} style={{ margin: 0 }}>
+                        {item.name}
+                      </Typography.Title>
+                      <Text type="secondary">單價: ${item.price}</Text>
+                    </Space>
+                  </Col>
+                  
+                  <Col>
+                    <div style={CartItemRightContainerStyle}>
+                      <Space size="small" align="center">
+                        <Button
+                          type="text"
+                          icon={<MinusOutlined />}
+                          size="small"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        />
+                        <Text style={CartQuantityText}>{item.quantity}</Text>
+                        <Button
+                          type="text"
+                          icon={<PlusOutlined />}
+                          size="small"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        />
+                        <Button
+                          type="text"
+                          icon={<DeleteOutlined />}
+                          size="small"
+                          danger
+                          onClick={() => handleRemoveItem(item.id)}
+                        />
+                      </Space>
+                    </div>
+                  </Col>
+                </Row>
+              </Card>
+            ))}
+          </Space>
+        </Col>
+        
+        {/* 右欄：結帳區域 */}
+        <Col xs={24} lg={8}>
+          <Card title="訂單摘要">
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Statistic
+                title="總金額"
+                value={totalPrice}
+                precision={0}
+                prefix="$"
+                valueStyle={{ color: '#3f8600' }}
+              />
+              <Divider />
+              <Button
+                type="primary"
+                size="large"
+                block
+                onClick={handleCheckout}
+              >
+                立即結帳
+              </Button>
+            </Space>
           </Card>
-        </Space>
-      )}
+        </Col>
+      </Row>
     </Container>
   );
 }

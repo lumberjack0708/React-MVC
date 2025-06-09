@@ -1,6 +1,6 @@
 <?php
-namespace app\Models;
-use vendor\DB;
+namespace Models;
+use Vendor\DB;
 
 class Account {
     // 獲取所有或單一帳戶資訊

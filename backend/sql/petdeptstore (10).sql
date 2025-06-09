@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2025-06-07 09:32:23
+-- 產生時間： 2025-06-09 13:05:10
 -- 伺服器版本： 10.4.32-MariaDB
 -- PHP 版本： 8.2.12
 
@@ -65,7 +65,21 @@ CREATE TABLE `action` (
 INSERT INTO `action` (`id`, `name`) VALUES
 (1, 'getUsers'),
 (2, 'newUser'),
-(3, 'getProducts');
+(3, 'getProducts'),
+(4, 'removeUser'),
+(5, 'updateUser'),
+(6, 'newProduct'),
+(7, 'removeProduct'),
+(8, 'updateProduct'),
+(9, 'getOrders'),
+(10, 'getOrder'),
+(11, 'getOrderStatistics'),
+(12, 'newOrder'),
+(13, 'removeOrder'),
+(14, 'updateOrder'),
+(15, 'getOrderDetail'),
+(16, 'updateOrderStatus'),
+(17, 'getUser');
 
 -- --------------------------------------------------------
 
@@ -91,7 +105,10 @@ INSERT INTO `orders` (`order_id`, `account_id`, `order_time`, `status`) VALUES
 (6, 3, '2025-06-06 19:28:30', 'pending'),
 (7, 1, '2025-06-07 14:41:39', 'cancelled'),
 (8, 1, '2025-06-07 14:45:44', 'pending'),
-(9, 1, '2025-06-07 14:49:57', 'processing');
+(9, 1, '2025-06-07 14:49:57', 'processing'),
+(10, 1, '2025-06-07 17:16:30', 'pending'),
+(11, 1, '2025-06-07 17:17:36', 'cancelled'),
+(12, 1, '2025-06-09 18:14:28', 'pending');
 
 -- --------------------------------------------------------
 
@@ -124,7 +141,11 @@ INSERT INTO `order_detail` (`order_id`, `product_id`, `quantity`) VALUES
 (8, 7, 1),
 (9, 1, 3),
 (9, 8, 1),
-(9, 18, 1);
+(9, 18, 1),
+(10, 2, 1),
+(11, 5, 1),
+(11, 19, 1),
+(12, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -147,24 +168,24 @@ CREATE TABLE `product` (
 
 INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`, `image_url`) VALUES
 (1, '犬用飼料 2kg', 350.00, 49, 'food', NULL),
-(2, '貓抓板', 120.00, 33, 'toy', NULL),
+(2, '貓抓板', 120.00, 31, 'toy', NULL),
 (3, '寵物睡墊', 450.00, 19, 'accessories', NULL),
 (4, '鳥用水樽', 80.00, 45, 'accessories', NULL),
-(5, '貓砂盆 附蓋', 600.00, 15, 'accessories', NULL),
+(5, '貓砂盆 附蓋', 600.00, 14, 'accessories', NULL),
 (6, '狗狗潔牙骨(10入)', 200.00, 60, 'food', NULL),
 (7, '小動物跑輪', 300.00, 24, 'toy', NULL),
 (8, '貓咪零食 - 鮪魚條', 90.00, 79, 'food', NULL),
 (9, '智能餵食器', 1990.00, 10, 'accessories', NULL),
 (10, '犬用牽繩 (紅色)', 250.00, 35, 'accessories', NULL),
 (11, '寵物洗毛精 500ml', 180.00, 45, 'accessories', NULL),
-(12, '貓跳台 四層', 1680.00, 2, 'accessories', NULL),
+(12, '貓跳台 四層', 1680.00, 5, 'accessories', NULL),
 (13, '狗狗雨衣 (M號)', 420.00, 20, 'accessories', NULL),
-(14, '寵物提籃 (小型犬/貓)', 750.00, 2, 'accessories', NULL),
+(14, '寵物提籃 (小型犬/貓)', 750.00, 5, 'accessories', NULL),
 (15, '兔子飼料 1.5kg', 320.00, 18, 'food', NULL),
 (16, '狗狗玩具 - 發聲球', 150.00, 50, 'toy', NULL),
 (17, '貓用逗貓棒', 90.00, 70, 'toy', NULL),
 (18, '倉鼠木屑 (無塵)', 110.00, 39, 'accessories', NULL),
-(19, '水龜濾水器', 1350.00, 8, 'accessories', NULL),
+(19, '水龜濾水器', 1350.00, 7, 'accessories', NULL),
 (20, '鳥飼料混合包 1kg', 160.00, 28, 'food', NULL);
 
 -- --------------------------------------------------------
@@ -203,8 +224,53 @@ CREATE TABLE `role_action` (
 --
 
 INSERT INTO `role_action` (`id`, `role_id`, `action_id`) VALUES
+(3, 1, 1),
+(4, 1, 2),
+(5, 1, 4),
+(6, 1, 5),
+(7, 1, 17),
+(8, 1, 3),
+(9, 1, 6),
+(10, 1, 7),
+(11, 1, 8),
+(12, 1, 9),
+(13, 1, 10),
+(14, 1, 11),
+(15, 1, 12),
+(16, 1, 13),
+(17, 1, 14),
+(18, 1, 15),
+(19, 1, 16),
+(20, 2, 5),
+(21, 2, 17),
+(22, 2, 3),
+(23, 2, 11),
+(24, 2, 12),
+(25, 2, 13),
+(26, 2, 15),
+(27, 2, 10);
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `user_role`
+--
+
+CREATE TABLE `user_role` (
+  `id` int(11) NOT NULL,
+  `account_id` int(11) NOT NULL,
+  `role_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- 傾印資料表的資料 `user_role`
+--
+
+INSERT INTO `user_role` (`id`, `account_id`, `role_id`) VALUES
 (1, 1, 1),
-(2, 2, 2);
+(2, 1, 2),
+(3, 2, 2),
+(4, 3, 2);
 
 --
 -- 已傾印資料表的索引
@@ -258,6 +324,14 @@ ALTER TABLE `role_action`
   ADD KEY `action_id` (`action_id`);
 
 --
+-- 資料表索引 `user_role`
+--
+ALTER TABLE `user_role`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_userRole_account` (`account_id`),
+  ADD KEY `fk_userRole_role` (`role_id`);
+
+--
 -- 在傾印的資料表使用自動遞增(AUTO_INCREMENT)
 --
 
@@ -271,13 +345,13 @@ ALTER TABLE `account`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `action`
 --
 ALTER TABLE `action`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=10;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=13;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `product`
@@ -295,7 +369,13 @@ ALTER TABLE `role`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `role_action`
 --
 ALTER TABLE `role_action`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+
+--
+-- 使用資料表自動遞增(AUTO_INCREMENT) `user_role`
+--
+ALTER TABLE `user_role`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- 已傾印資料表的限制式
@@ -326,6 +406,13 @@ ALTER TABLE `order_detail`
 ALTER TABLE `role_action`
   ADD CONSTRAINT `fk_role_action_action` FOREIGN KEY (`action_id`) REFERENCES `action` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_role_action_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE;
+
+--
+-- 資料表的限制式 `user_role`
+--
+ALTER TABLE `user_role`
+  ADD CONSTRAINT `fk_userRole_account` FOREIGN KEY (`account_id`) REFERENCES `account` (`account_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_userRole_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

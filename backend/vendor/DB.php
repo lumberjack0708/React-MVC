@@ -1,6 +1,6 @@
 <?php
-namespace vendor;
-use vendor\Controller;
+namespace Vendor;
+use Vendor\Controller;
 use \PDO;
 use \PDOException;
 

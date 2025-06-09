@@ -1,11 +1,12 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, DatePicker, Spin } from 'antd';
+import { Card, Form, Input, Button, DatePicker, Spin, message } from 'antd';
 import { Container, Heading } from '../styles/styles';
 import { LoadingUserContainer, DatePickerStyle } from '../styles/userProfileStyles';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import dayjs from 'dayjs';
+import Request from '../utils/Request';
 
 function UserProfilePage() {
   const { notify } = useNotification();
@@ -15,11 +16,15 @@ function UserProfilePage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.post(getApiUrl('getUsers'), Qs.stringify({ uid: userId }));
+      if (!userId) {
+        message.error('無法獲取用戶 ID，請重新登入');
+        setLoading(false);
+        return;
+      }
 
-        if (response.data && response.data.status === 200 && response.data.result.length > 0) {
+      try {
+        const response = await Request().post(getApiUrl('getUsers'), Qs.stringify({ uid: userId }));
+        if (response.data.status === 200 && response.data.result.length > 0) {
           const userData = response.data.result[0];
           if (userData.birth) {
             userData.birth = dayjs(userData.birth, 'YYYY-MM-DD');
@@ -42,20 +47,21 @@ function UserProfilePage() {
   }, [userId, form, notify]);
 
   const onFinish = async (values) => {
-    const birthDate = values.birth ? values.birth.format('YYYY-MM-DD') : null;
-
+    setLoading(true);
+    const userId = 1; // 同上，應動態獲取
+    
     const dataToUpdate = {
       uid: userId,
       name: values.full_name,
       addr: values.addr,
-      bir: birthDate,
-      ...(values.password && { password: values.password }),
+      bir: values.birth ? values.birth.format('YYYY-MM-DD') : null,
+      password: values.password,
     };
 
     try {
-      const response = await axios.post(getApiUrl('updateUser'), Qs.stringify(dataToUpdate));
-      if (response.data && response.data.status === 200) {
-        notify.success('成功', '用戶資訊已成功更新！');
+      const response = await Request().post(getApiUrl('updateUser'), Qs.stringify(dataToUpdate));
+      if (response.data.status === 200) {
+        message.success('用戶資料更新成功！');
       } else {
         throw new Error(response.data.message || '更新失敗');
       }
@@ -63,6 +69,8 @@ function UserProfilePage() {
       const errorMessage = error.response?.data?.message || error.message || '更新用戶資訊失敗！';
       console.error('更新失敗:', error);
       notify.error('失敗', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 

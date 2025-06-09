@@ -1,6 +1,6 @@
 <?php
-    namespace app\Models;
-    use vendor\DB;
+    namespace Models;
+    use Vendor\DB;
 
     class Order{
         // 店家端：若沒有挾帶`account_id`，則先顯示訂單總覽

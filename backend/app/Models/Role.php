@@ -1,6 +1,6 @@
 <?php
-    namespace app\Models;
-    use vendor\DB;
+    namespace Models;
+    use Vendor\DB;
 
     class Role{
         public function getRoles(){

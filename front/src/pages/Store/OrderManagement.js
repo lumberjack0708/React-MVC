@@ -1,7 +1,8 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Space, Typography, notification, Select, Button, Modal } from 'antd';
+import { Table, Tag, Space, Typography, notification, Select, Button, Modal, message } from 'antd';
 import { getApiUrl } from '../../config';
+import Request from '../../utils/Request';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -15,17 +16,10 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     setLoading(true);
+    const url = getApiUrl('getOrders');
     try {
-      const url = getApiUrl('getOrders');
-      const response = await axios.get(url);
-      if (response.data.status === 200) {
-        setOrders(response.data.result);
-      } else {
-        notification.error({
-          message: '讀取失敗',
-          description: response.data.message || '無法獲取訂單列表，請稍後再試。',
-        });
-      }
+      const response = await Request().get(url);
+      setOrders(response.data.result || []);
     } catch (error) {
       notification.error({
         message: '請求錯誤',
@@ -46,7 +40,7 @@ const OrderManagement = () => {
     try {
       const url = getApiUrl('getOrderDetail');
       const data = Qs.stringify({ order_id: orderId });
-      const response = await axios.post(url, data);
+      const response = await Request().post(url, data);
 
       if (response.data.status === 200) {
         setCurrentOrderDetails(response.data.result);
@@ -85,16 +79,16 @@ const OrderManagement = () => {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     setLoading(true);
-    try {
-      const url = getApiUrl('updateOrderStatus');
-      const data = Qs.stringify({ order_id: orderId, status: newStatus });
-      const response = await axios.post(url, data);
+    const url = getApiUrl('updateOrderStatus');
+    const data = {
+      order_id: orderId,
+      status: newStatus,
+    };
 
+    try {
+      const response = await Request().post(url, Qs.stringify(data));
       if (response.data.status === 200) {
-        notification.success({
-          message: '更新成功',
-          description: `訂單 #${orderId} 的狀態已更新為 ${newStatus}。`,
-        });
+        message.success(`訂單 #${orderId} 狀態已更新為 ${newStatus}`);
         fetchOrders(); // 重新載入訂單
       } else {
         notification.error({

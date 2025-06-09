@@ -1,4 +1,4 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -21,6 +21,7 @@ import {
 import { Card, Button, Typography, Row, Col, Spin, Statistic } from 'antd';
 import { ShoppingCartOutlined, EyeOutlined } from '@ant-design/icons';
 import { getProductImage } from '../assets/images/index';
+import Request from '../utils/Request';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -34,39 +35,23 @@ function HomePage() {
   const navigate = useNavigate();       // 用於頁面導覽
   const dispatch = useDispatch();       // 使用 dispatch 發送 Redux actions
   const { notify } = useNotification(); // 取得通知顯示函數
-  const [featuredProducts, setFeaturedProducts] = useState([]); // 推薦商品狀態
-  const [loading, setLoading] = useState(true);                // 載入狀態
-  const [error, setError] = useState(null);                   // 錯誤狀態
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadFeaturedProducts = async () => {
-      setLoading(true);
-      setError(null);
+    const fetchProducts = async () => {
       try {
-        const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({}));
-        if (response.data && response.data.status === 200) {
-          const formattedProducts = response.data.result.map(p => ({
-            id: p.product_id,
-            name: p.name,
-            price: parseFloat(p.price),
-            category: p.category,
-            stock: parseInt(p.stock, 10),
-          }));
-          setFeaturedProducts(formattedProducts.slice(0, 3));
-        } else {
-          throw new Error(response.data.message || '無法獲取推薦產品');
-        }
-      } catch (err) {
-        const errorMessage = err.response?.data?.message || err.message || '載入推薦產品時發生未知錯誤';
-        setError(errorMessage);
-        notify.error('載入推薦產品失敗', errorMessage);
-        console.error("載入推薦產品失敗:", err);
+        const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({}));
+        // 只取前 8 項作為特色商品
+        setProducts(response.data.result.slice(0, 8) || []);
+      } catch (error) {
+        console.error("無法獲取特色商品:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadFeaturedProducts();
-  }, [notify]);
+    fetchProducts();
+  }, []);
   
   // 處理添加商品到購物車
   const handleAddToCart = (product) => {
@@ -102,16 +87,13 @@ function HomePage() {
         {loading && (
           <LoadingRecommendedContainer><Spin size="large" /></LoadingRecommendedContainer>
         )}
-        {!loading && error && featuredProducts.length === 0 && (
-           <ErrorRecommendedContainer><Text type="danger">無法載入推薦產品: {error}</Text></ErrorRecommendedContainer>
-        )}
-        {!loading && !error && featuredProducts.length === 0 && (
+        {!loading && products.length === 0 && (
             <EmptyRecommendedContainer><Text>暫無推薦產品。</Text></EmptyRecommendedContainer>
         )}
 
-        {!loading && featuredProducts.length > 0 && (
+        {!loading && products.length > 0 && (
           <Row gutter={[16, 24]}>
-            {featuredProducts.map(product => (
+            {products.map(product => (
               <Col xs={24} sm={12} md={8} key={product.id}>
                 <Card
                   hoverable

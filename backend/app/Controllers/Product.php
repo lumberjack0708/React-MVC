@@ -1,8 +1,8 @@
 <?php
-namespace app\Controllers;
-use vendor\DB;
-use vendor\Controller;
-use app\Models\Product as ProductModel;
+namespace Controllers;
+use Vendor\DB;
+use Vendor\Controller;
+use Models\Product as ProductModel;
 
 class Product extends Controller
 {

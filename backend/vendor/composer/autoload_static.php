@@ -7,32 +7,46 @@ namespace Composer\Autoload;
 class ComposerStaticInit726b0a650f3a35c706f5a399d9e99662
 {
     public static $prefixLengthsPsr4 = array (
-        'v' => 
+        'V' => 
         array (
-            'vendor\\' => 7,
+            'Vendor\\' => 7,
         ),
-        'a' => 
+        'M' => 
         array (
-            'app\\' => 4,
+            'Models\\' => 7,
+            'Middlewares\\' => 12,
         ),
         'F' => 
         array (
             'Firebase\\JWT\\' => 13,
         ),
+        'C' => 
+        array (
+            'Controllers\\' => 12,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'vendor\\' => 
+        'Vendor\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/vendor',
+            0 => 'D:\\xampp20250105\\htdocs\\FinalProj\\backend\\vendor',
         ),
-        'app\\' => 
+        'Models\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/app',
+            0 => __DIR__ . '/../..' . '/app/Models',
+        ),
+        'Middlewares\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/app/Middlewares',
         ),
         'Firebase\\JWT\\' => 
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+            1 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+        ),
+        'Controllers\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/app/Controllers',
         ),
     );
 

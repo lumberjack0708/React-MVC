@@ -1,7 +1,7 @@
 <?php
-namespace app\Controllers;
-use vendor\Controller;
-use app\Models\Account as AccountModel;
+namespace Controllers;
+use Vendor\Controller;
+use Models\Account as AccountModel;
 
 class Account extends Controller
 {

@@ -16,13 +16,18 @@ import OrderManagement from './pages/Store/OrderManagement';
 // 匯入通知相關的 Provider
 import { NotificationProvider } from './components/Notification';
 // 匯入 Ant Design 元件
-import { Layout, Menu, Badge, theme, Button, App as AntApp } from 'antd';
-import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, ShopOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Layout, Menu, Badge, theme, Button, App as AntApp, Dropdown } from 'antd';
+import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, ShopOutlined, CalendarOutlined, LoginOutlined, LogoutOutlined } from '@ant-design/icons';
+// 匯入登入模態框組件
+import LoginModal from './components/LoginModal';
 // 匯入 Redux 相關函數和選擇器
 import { useSelector } from 'react-redux';
 import { selectCartItemCount } from './store/cartSlice';
 // 匯入 normalize.css 標準化瀏覽器樣式
 import 'normalize.css'; 
+// 引入新的工具函式
+import Request from './utils/Request';
+import { getToken, removeToken, setToken } from './utils/auth';
 
 const { Header, Content } = Layout;
 
@@ -38,6 +43,12 @@ function AppContent() {
 
   // 用於管理當前選中的菜單項
   const [current, setCurrent] = useState('/');
+  
+  // 登入相關狀態
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [user, setUser] = useState(null); // 用戶資訊
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true); // 新增：用於表示正在檢查認證
 
   useEffect(() => {
     // 根據當前 URL 路徑設置選中的菜單項
@@ -47,6 +58,38 @@ function AppContent() {
     else if (path.includes('/purchase-history')) setCurrent('purchase-history');
     else if (path.includes('/cart')) setCurrent('cart');
     else if (path.includes('/store')) setCurrent('store');
+
+    // === 新增：App 啟動時檢查 Token ===
+    const checkAuth = async () => {
+      const token = getToken();
+      if (!token) {
+        setIsAuthChecking(false);
+        return;
+      }
+
+      try {
+        // 直接使用 Request，它已經包含了 token
+        const res = await Request().get(''); // 使用 GET 請求驗證 token
+        const response = res.data;
+        if (response.status === 200) {
+          // Token 有效，更新 token 和使用者狀態
+          setToken(response.token);
+          setUser(response.user);
+          setIsLoggedIn(true);
+        } else {
+          // Token 無效或過期
+          removeToken();
+        }
+      } catch (error) {
+        // API 請求失敗
+        console.error('認證檢查失敗:', error);
+        removeToken();
+      } finally {
+        setIsAuthChecking(false); // 結束檢查
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const menuItems = [
@@ -87,6 +130,31 @@ function AppContent() {
   const handleStoreIconClick = () => {
     navigate('/store/products');
   };
+
+  // 登入相關處理函數
+  const handleLoginClick = () => {
+    setLoginModalVisible(true);
+  };
+
+  const handleLoginSuccess = (loginResponse) => {
+    // loginResponse 已經包含了 user 和 token
+    // token 已在 LoginModal 中設定
+    setUser(loginResponse.user);
+    setIsLoggedIn(true);
+    console.log('登入成功，用戶資料:', loginResponse.user);
+  };
+
+  const handleLogout = () => {
+    removeToken(); // 從 localStorage 移除 token
+    setUser(null);
+    setIsLoggedIn(false);
+    console.log('用戶已登出');
+  };
+
+  // 新增：如果正在檢查認證，可以顯示一個 Loading 畫面
+  if (isAuthChecking) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>正在載入...</div>;
+  }
 
   return (
     <Layout className="layout" style={{ minHeight: '100vh' }}>
@@ -131,22 +199,73 @@ function AppContent() {
           top: '50%',
           transform: 'translateY(-50%)',
           display: 'flex',
-          gap: '8px'
+          gap: '8px',
+          alignItems: 'center'
         }}>
-          <Button 
-            type="primary" 
-            shape="circle" 
-            icon={<UserOutlined />}
-            onClick={handleUserIconClick}
-            title="用戶資訊"
-          />
-          <Button 
-            type="primary" 
-            shape="circle" 
-            icon={<ShopOutlined />}
-            onClick={handleStoreIconClick}
-            title="店家管理"
-          />
+          {isLoggedIn ? (
+            <>
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'profile',
+                      icon: <UserOutlined />,
+                      label: '個人資料',
+                      onClick: handleUserIconClick,
+                    },
+                    {
+                      key: 'logout',
+                      icon: <LogoutOutlined />,
+                      label: '登出',
+                      onClick: handleLogout,
+                    },
+                  ],
+                }}
+                placement="bottomRight"
+                trigger={['click']}
+              >
+                <Button 
+                  type="primary" 
+                  shape="circle" 
+                  icon={<UserOutlined />}
+                  title={`歡迎，${user?.full_name || '用戶'}`}
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                />
+              </Dropdown>
+              <Button 
+                type="primary" 
+                shape="circle" 
+                icon={<ShopOutlined />}
+                onClick={handleStoreIconClick}
+                title="店家管理"
+              />
+            </>
+          ) : (
+            <>
+              <Button 
+                type="primary" 
+                shape="circle" 
+                icon={<LoginOutlined />}
+                onClick={handleLoginClick}
+                title="會員登入"
+                style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
+              />
+              <Button 
+                type="primary" 
+                shape="circle" 
+                icon={<UserOutlined />}
+                onClick={handleUserIconClick}
+                title="用戶資訊"
+              />
+              <Button 
+                type="primary" 
+                shape="circle" 
+                icon={<ShopOutlined />}
+                onClick={handleStoreIconClick}
+                title="店家管理"
+              />
+            </>
+          )}
         </div>
       </Header>
       <Content style={{ padding: '0 50px', marginTop: '16px' }}>
@@ -166,6 +285,13 @@ function AppContent() {
           </Routes>
         </div>
       </Content>
+      
+      {/* 登入模態框 */}
+      <LoginModal
+        visible={loginModalVisible}
+        onCancel={() => setLoginModalVisible(false)}
+        onSuccess={handleLoginSuccess}
+      />
     </Layout>
   );
 }

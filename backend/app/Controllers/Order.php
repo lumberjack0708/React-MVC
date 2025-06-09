@@ -1,8 +1,8 @@
 <?php
-namespace app\Controllers;
-use vendor\DB;
-use vendor\Controller;
-use app\Models\Order as OrderModel;
+namespace Controllers;
+use Vendor\DB;
+use Vendor\Controller;
+use Models\Order as OrderModel;
 
 class Order extends Controller
 {

@@ -1,11 +1,12 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm} from 'antd';
+import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col,Button,Modal,Descriptions,Popconfirm, message } from 'antd';
 import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
 import {LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText} from '../styles/pageStyles';
+import Request from '../utils/Request';
 
 const { Title, Text } = Typography;
 
@@ -26,31 +27,27 @@ function PurchaseHistoryPage() {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   
-  // 模擬用戶ID（實際應用中應該從認證系統獲取）
-  const currentUserId = 1; // 這裡暫時寫死，實際應該從用戶登入狀態獲取
-  
   // 載入購買紀錄和統計數據
   useEffect(() => {
-    const loadData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        // 呼叫後端： 載入訂單列表和統計數據
-        const [ordersResponse, statisticsResponse] = await Promise.all([
-          axios.post(getApiUrl('getOrder'), Qs.stringify({ account_id: currentUserId })),
-          axios.post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: currentUserId }))
+        const [ordersResponse, statsResponse] = await Promise.all([
+          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: 2 })),
+          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: 2 }))
         ]);
         
-        if (ordersResponse.data && ordersResponse.data.status === 200) {
+        if (ordersResponse.data.status === 200) {
           setOrders(ordersResponse.data.result || []);
         } else {
           throw new Error(ordersResponse.data.message || '無法獲取購買紀錄');
         }
         
-        if (statisticsResponse.data && statisticsResponse.data.status === 200) {
-          setStatistics(statisticsResponse.data.result);
+        if (statsResponse.data.status === 200) {
+          setStatistics(statsResponse.data.result);
         } else {
-          console.warn('無法獲取統計數據:', statisticsResponse.data.message);
+          console.warn('無法獲取統計數據:', statsResponse.data.message);
         }
       } catch (err) {
         const errorMessage = err.response?.data?.message || err.message || '載入購買紀錄時發生未知錯誤';
@@ -62,7 +59,7 @@ function PurchaseHistoryPage() {
       }
     };
     
-    loadData();
+    fetchData();
   }, [notify]);
   
   // 查看訂單詳情
@@ -70,7 +67,7 @@ function PurchaseHistoryPage() {
     setDetailLoading(true);
     setIsDetailModalVisible(true);
     try {
-      const response = await axios.post(
+      const response = await Request().post(
         getApiUrl('getOrderDetail'), 
         Qs.stringify({ order_id: orderId })
       );
@@ -98,37 +95,32 @@ function PurchaseHistoryPage() {
   
   // 取消訂單
   const handleCancelOrder = async (orderId) => {
+    const currentUserId = 2; 
+    setLoading(true);
     try {
-      const response = await axios.post(
-        getApiUrl('removeOrder'), 
-        Qs.stringify({ 
-          order_id: orderId, 
-          account_id: currentUserId 
+      const response = await Request().post(
+        getApiUrl('removeOrder'),
+        Qs.stringify({
+          order_id: orderId,
+          account_id: currentUserId
         })
       );
-      
-      if (response.data && response.data.status === 200) {
-        notify.success('取消成功', response.data.message);
-        // 重新載入購買紀錄和統計數據
-        const [ordersResponse, statisticsResponse] = await Promise.all([
-          axios.post(getApiUrl('getOrder'), Qs.stringify({ account_id: currentUserId })),
-          axios.post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: currentUserId }))
+      if (response.data.status === 200) {
+        message.success(response.data.message || '訂單已成功取消');
+        // 重新獲取數據
+        const [ordersResponse, statsResponse] = await Promise.all([
+          Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: currentUserId })),
+          Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: currentUserId }))
         ]);
-        
-        if (ordersResponse.data && ordersResponse.data.status === 200) {
-          setOrders(ordersResponse.data.result || []);
-        }
-        
-        if (statisticsResponse.data && statisticsResponse.data.status === 200) {
-          setStatistics(statisticsResponse.data.result);
-        }
+        setOrders(ordersResponse.data.result || []);
+        setStatistics(statsResponse.data.result || {});
       } else {
-        throw new Error(response.data.message || '取消訂單失敗');
+        message.error(response.data.message || '取消訂單失敗');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || '取消訂單時發生未知錯誤';
-      notify.error('取消失敗', errorMessage);
-      console.error("取消訂單失敗:", err);
+    } catch (error) {
+      message.error('網路錯誤，無法取消訂單');
+    } finally {
+      setLoading(false);
     }
   };
   

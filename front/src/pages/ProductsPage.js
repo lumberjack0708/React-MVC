@@ -1,4 +1,4 @@
-/* global axios, Qs */
+/* global Qs */
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
@@ -21,6 +21,7 @@ import {
   LoadingDetailContainer
 } from '../styles/pageStyles';
 import { getProductImage } from '../assets/images/index';
+import Request from '../utils/Request';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -50,54 +51,32 @@ function ProductsPage() {
   
   // 從後端 API 獲取產品數據
   useEffect(() => {
-    const loadProducts = async () => {
+    const fetchProducts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({}));
-        if (response.data && response.data.status === 200) {
-          const formattedProducts = response.data.result.map(p => ({
-            id: p.product_id,
-            name: p.name,
-            price: parseFloat(p.price),
-            category: p.category,
-            stock: parseInt(p.stock, 10),
-            image_url: p.image_url,
-          }));
-          setProducts(formattedProducts);
-        } else {
-          throw new Error(response.data.message || '無法獲取產品資料');
-        }
-      } catch (err) {
-        const errorMessage = err.response?.data?.message || err.message || '載入產品時發生未知錯誤';
+        const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({}));
+        setProducts(response.data.result || []);
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || '載入產品時發生未知錯誤';
         setError(errorMessage);
         notify.error('載入產品失敗', errorMessage);
-        console.error("載入產品失敗:", err);
+        console.error("載入產品失敗:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadProducts();
+    fetchProducts();
   }, [notify]);
   
   // 處理查看詳情 - 從後端獲取最新的產品資訊
-  const handleViewDetails = async (productId) => {
+  const fetchProductDetails = async (productId) => {
     setIsModalLoading(true);
     setSelectedProduct(null); // 清除舊的選擇
     try {
-      const response = await axios.post(getApiUrl('getProducts'), Qs.stringify({ pid: productId }));
-      if (response.data && response.data.status === 200 && response.data.result.length > 0) {
-        const p_detail = response.data.result[0];
-        const detailedProduct = {
-          id: p_detail.product_id,
-          name: p_detail.name,
-          price: parseFloat(p_detail.price),
-          category: p_detail.category,
-          stock: parseInt(p_detail.stock, 10),
-          description: p_detail.description || `這是 ${p_detail.name} 的詳細介紹。`, // 假設有 description 欄位
-          imageSource: getProductImage(p_detail.category, p_detail.name) || '/placeholder.png'
-        };
-        setSelectedProduct(detailedProduct);
+      const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({ pid: productId }));
+      if (response.data.status === 200) {
+        setSelectedProduct(response.data.result[0]);
       } else {
         throw new Error(response.data.message || '找不到該產品的詳細資訊');
       }
@@ -249,7 +228,7 @@ function ProductsPage() {
                   <Button 
                     type="text" 
                     icon={<EyeOutlined />}
-                    onClick={() => handleViewDetails(product.id)} 
+                    onClick={() => fetchProductDetails(product.id)} 
                   >
                     查看詳情
                   </Button>,

@@ -1,8 +1,8 @@
 <?php
-namespace app\Controllers;
-use vendor\DB;
-use vendor\Controller;
-use app\Models\Employee as EmployeeModel;
+namespace Controllers;
+use Vendor\DB;
+use Vendor\Controller;
+use Models\Employee as EmployeeModel;
 
 class Employee extends Controller
 {

@@ -285,7 +285,7 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/purchase-history" element={<PurchaseHistoryPage user={user} />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route path="/cart" element={<CartPage user={user} />} />
             <Route path="/user-profile" element={<UserProfilePage user={user} />} />
             {/* 店家管理路由 */}
             <Route path="/store" element={<StoreLayout />}>

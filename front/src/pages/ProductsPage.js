@@ -56,10 +56,11 @@ function ProductsPage() {
       setError(null);
       try {
         const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({}));
-        // 將 product_id 映射為 id，以符合前端期望的資料結構
+        // 確保商品資料包含必要的欄位
         const mappedProducts = (response.data.result || []).map(product => ({
           ...product,
-          id: product.product_id // 將 product_id 映射為 id
+          id: product.product_id,      // 統一使用id
+          product_id: product.product_id  // 保留原始product_id
         }));
         setProducts(mappedProducts);
       } catch (error) {

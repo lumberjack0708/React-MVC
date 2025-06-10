@@ -96,7 +96,7 @@ class AuthMiddleware extends Controller{
         $issuer_claim = "http://localhost";
         $audience_claim = "http://localhost";
         $issuedat_claim = time();
-        $expire_claim = $issuedat_claim + 60; // 時效
+        $expire_claim = $issuedat_claim + 3600; // 1小時
         $payload = array(
             "iss" => $issuer_claim,
             "aud" => $audience_claim,

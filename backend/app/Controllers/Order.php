@@ -43,13 +43,34 @@ class Order extends Controller
     }
     
     public function newOrder(){
+        // 除錯：檢查接收到的POST資料
+        error_log("POST data: " . print_r($_POST, true));
+        
         // 訂單主表
-        $account_id = $_POST['account_id'];
+        $account_id = $_POST['account_id'] ?? null;
         // 訂單詳細表
-        $products_id = $_POST['products_id'];
-        $quantity = $_POST['quantity'];
+        $products_id = $_POST['products_id'] ?? array();
+        $quantity = $_POST['quantity'] ?? array();
+        
+        // 除錯：檢查參數值
+        error_log("account_id: " . $account_id);
+        error_log("products_id: " . print_r($products_id, true));
+        error_log("quantity: " . print_r($quantity, true));
+        
+        // 檢查必要參數
+        if (empty($account_id)) {
+            return array('status' => 400, 'message' => '缺少account_id參數');
+        }
+        
+        if (empty($products_id)) {
+            return array('status' => 400, 'message' => '缺少products_id參數');
+        }
+        
+        if (empty($quantity)) {
+            return array('status' => 400, 'message' => '缺少quantity參數');
+        }
 
-        // 直接回傳模型的結果，不處理錯誤
+        // 直接回傳模型的結果
         return $this->om->newOrder($account_id, $products_id, $quantity);
     }
     

@@ -1,12 +1,4 @@
 <?php
-// JWT 相關路由 - 只引入不會直接執行的檔案
-include_once '../jwt/genToken.php';  // 產生Token（只包含函數定義）
-
-// $router->register(action: 'getUsers', class: 'Employee', method: 'getUsers');
-// $router->register(action: 'newUser', class: 'Employee', method: 'newUser');
-// $router->register(action: 'removeUser', class: 'Employee', method: 'removeUser');
-// $router->register(action: 'updateUser', class: 'Employee', method: 'updateUser');
-
 // 產品相關路由
 $router->register(action: 'getProducts', class: 'Product',method: 'getProducts');
 $router->register(action: 'newProduct', class: 'Product', method: 'newProduct');

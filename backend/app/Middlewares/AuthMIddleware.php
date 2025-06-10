@@ -5,8 +5,19 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Vendor\Controller;
 use Vendor\DB;
+// 匯入權限控管
+use Models\Account as AccountModel;
+use Models\Action;
 
 class AuthMiddleware extends Controller{
+    // 開始檢查權限
+    private static $id;
+
+    public static function checkPermission($action){
+        
+        
+    }
+    
     public static function checkToken(){
         $headers = getallheaders();
         

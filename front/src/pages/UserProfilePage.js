@@ -1,32 +1,55 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, DatePicker, Spin, message, Result } from 'antd';
+import { Card, Form, Input, Button, DatePicker, Spin, Result } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { Container, Heading } from '../styles/styles';
 import { LoadingUserContainer, DatePickerStyle } from '../styles/userProfileStyles';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import dayjs from 'dayjs';
 import Request from '../utils/Request';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
 
 function UserProfilePage({ user }) {
   const { notify } = useNotification();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(true);
+  const [isTokenExpired, setIsTokenExpired] = useState(false);
   const token = getToken();
   const navigate = useNavigate();
+
+  const checkTokenExpiry = (response) => {
+    if (response?.data?.status === 401 || response?.data?.status === 403) {
+      const message = response.data.message || '';
+      if (message.includes('Expired token') || 
+          message.includes('Token無效') || 
+          message.includes('Token過期') ||
+          message.includes('Missing authentication token')) {
+        setIsTokenExpired(true);
+        removeToken();
+        notify.error('登入過期', '您的登入權限已過期，請重新登入');
+        return true;
+      }
+    }
+    return false;
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user || !user.account_id) {
-        message.error('無法獲取用戶 ID，請重新登入');
+        notify.error('用戶資訊錯誤', '無法獲取用戶 ID，請重新登入');
         setLoading(false);
         return;
       }
 
       try {
         const response = await Request().post(getApiUrl('getUsers'), Qs.stringify({ uid: user.account_id }));
+        
+        if (checkTokenExpiry(response)) {
+          return;
+        }
+        
         if (response.data.status === 200 && response.data.result.length > 0) {
           const userData = response.data.result[0];
           if (userData.birth) {
@@ -35,12 +58,16 @@ function UserProfilePage({ user }) {
           form.setFieldsValue(userData);
         } else {
           const message = response.data?.message || '無法獲取用戶數據';
-          notify.error('錯誤', message);
+          notify.error('載入失敗', message);
         }
       } catch (error) {
+        if (checkTokenExpiry(error.response)) {
+          return;
+        }
+        
         const errorMessage = error.response?.data?.message || error.message || '獲取用戶數據失敗，請稍後再試';
         console.error('獲取用戶數據失敗:', error);
-        notify.error('錯誤', errorMessage);
+        notify.error('載入失敗', errorMessage);
       } finally {
         setLoading(false);
       }
@@ -68,15 +95,24 @@ function UserProfilePage({ user }) {
 
     try {
       const response = await Request().post(getApiUrl('updateUser'), Qs.stringify(dataToUpdate));
+      
+      if (checkTokenExpiry(response)) {
+        return;
+      }
+      
       if (response.data.status === 200) {
-        message.success('用戶資料更新成功！');
+        notify.success('更新成功', '用戶資料更新成功！您的個人資訊已儲存。');
       } else {
         throw new Error(response.data.message || '更新失敗');
       }
     } catch (error) {
+      if (checkTokenExpiry(error.response)) {
+        return;
+      }
+      
       const errorMessage = error.response?.data?.message || error.message || '更新用戶資訊失敗！';
       console.error('更新失敗:', error);
-      notify.error('失敗', errorMessage);
+      notify.error('更新失敗', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -84,10 +120,32 @@ function UserProfilePage({ user }) {
 
   const onFinishFailed = (errorInfo) => {
     console.log('表單驗證失敗:', errorInfo);
-    notify.error('失敗', '請檢查表單欄位！');
+    notify.error('表單驗證失敗', '請檢查表單欄位是否填寫正確！');
   };
 
-  // 未登入時顯示提示頁
+  if (isTokenExpired) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="403"
+            title="登入權限已過期"
+            subTitle="您的Token已過期，請重新登入以繼續使用。"
+            icon={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
+            extra={[
+              <Button type="primary" key="login" onClick={() => navigate('/')}>
+                重新登入
+              </Button>,
+              <Button key="home" onClick={() => navigate('/')}>
+                返回首頁
+              </Button>
+            ]}
+          />
+        </Card>
+      </Container>
+    );
+  }
+
   if (!token || !user) {
     return (
       <Container>
@@ -148,7 +206,7 @@ function UserProfilePage({ user }) {
             name="birth"
             label="生日"
           >
-                            <DatePicker style={DatePickerStyle} format="YYYY-MM-DD" />
+            <DatePicker style={DatePickerStyle} format="YYYY-MM-DD" />
           </Form.Item>
 
           <Form.Item
@@ -160,7 +218,7 @@ function UserProfilePage({ user }) {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={loading}>
               儲存變更
             </Button>
           </Form.Item>

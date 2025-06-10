@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2025-06-09 13:05:10
+-- 產生時間： 2025-06-10 10:56:14
 -- 伺服器版本： 10.4.32-MariaDB
 -- PHP 版本： 8.2.12
 
@@ -44,8 +44,13 @@ CREATE TABLE `account` (
 
 INSERT INTO `account` (`account_id`, `account_code`, `role_id`, `email`, `password`, `full_name`, `addr`, `birth`) VALUES
 (1, 'ADM1', 1, 'admin@petdept.com', 'jack800', '系統管理者', '台北市中正區中山南路1號', '2000-01-01'),
-(2, 'C001', 2, 'alice@petdept.com', 'alice123', 'Alice Chen', '高雄市鼓山區美術館路12號', '2001-02-14'),
-(3, 'C002', 2, 'bob@petdept.com', 'bob123', 'Bob Wu', '台中市西區公益路123號', '1999-08-23');
+(2, 'C001', 2, 'alice@petdept.com', 'alice123', 'Alice Chenn', '高雄市鼓山區美術館路12號', '2001-02-14'),
+(3, 'C002', 2, 'bob@petdept.com', 'bob123', 'Bob Wu', '台中市西區公益路123號', '1999-08-23'),
+(4, 'C003', 2, 'charlie@petdept.com', 'charlie123', 'Charlie Lin', '台北市大安區和平東路1號', '2002-03-05'),
+(5, 'C004', 2, 'david@petdept.com', 'david123', 'David Chen', '台南市東區崇學路45號', '2000-07-12'),
+(6, 'C005', 2, 'eva@petdept.com', 'eva123', 'Eva Wang', '高雄市三民區民族一路100號', '2003-11-20'),
+(7, 'C006', 2, 'frank@petdept.com', 'frank123', 'Frank Ho', '新竹市東區關新路68號', '1998-05-30'),
+(8, 'C007', 2, 'grace@petdept.com', 'grace123', 'Grace Liu', '桃園市中壢區中華路二段87號', '2001-09-15');
 
 -- --------------------------------------------------------
 
@@ -108,7 +113,17 @@ INSERT INTO `orders` (`order_id`, `account_id`, `order_time`, `status`) VALUES
 (9, 1, '2025-06-07 14:49:57', 'processing'),
 (10, 1, '2025-06-07 17:16:30', 'pending'),
 (11, 1, '2025-06-07 17:17:36', 'cancelled'),
-(12, 1, '2025-06-09 18:14:28', 'pending');
+(12, 1, '2025-06-09 18:14:28', 'pending'),
+(13, 2, '2025-06-10 15:27:21', 'pending'),
+(14, 2, '2025-06-10 15:27:48', 'pending'),
+(15, 2, '2025-06-10 15:34:24', 'processing'),
+(16, 1, '2025-06-10 15:36:47', 'pending'),
+(17, 1, '2025-06-10 15:37:03', 'pending'),
+(18, 1, '2025-06-10 15:40:44', 'pending'),
+(19, 1, '2025-06-10 15:45:24', 'pending'),
+(20, 1, '2025-06-10 15:46:31', 'pending'),
+(21, 1, '2025-06-10 15:55:33', 'pending'),
+(22, 2, '2025-06-10 16:19:43', 'shipped');
 
 -- --------------------------------------------------------
 
@@ -145,7 +160,28 @@ INSERT INTO `order_detail` (`order_id`, `product_id`, `quantity`) VALUES
 (10, 2, 1),
 (11, 5, 1),
 (11, 19, 1),
-(12, 2, 1);
+(12, 2, 1),
+(13, 1, 1),
+(13, 5, 1),
+(14, 5, 1),
+(14, 6, 1),
+(15, 1, 1),
+(15, 2, 1),
+(16, 2, 1),
+(16, 3, 1),
+(17, 6, 1),
+(17, 11, 1),
+(18, 10, 1),
+(18, 11, 4),
+(19, 1, 3),
+(19, 16, 2),
+(20, 5, 1),
+(20, 11, 2),
+(21, 2, 1),
+(21, 3, 4),
+(21, 5, 3),
+(22, 1, 1),
+(22, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -167,22 +203,22 @@ CREATE TABLE `product` (
 --
 
 INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`, `image_url`) VALUES
-(1, '犬用飼料 2kg', 350.00, 49, 'food', NULL),
-(2, '貓抓板', 120.00, 31, 'toy', NULL),
-(3, '寵物睡墊', 450.00, 19, 'accessories', NULL),
+(1, '犬用飼料 2kg', 350.00, 43, 'food', NULL),
+(2, '貓抓板', 120.00, 27, 'toy', NULL),
+(3, '寵物睡墊', 450.00, 14, 'accessories', NULL),
 (4, '鳥用水樽', 80.00, 45, 'accessories', NULL),
-(5, '貓砂盆 附蓋', 600.00, 14, 'accessories', NULL),
-(6, '狗狗潔牙骨(10入)', 200.00, 60, 'food', NULL),
+(5, '貓砂盆 附蓋', 600.00, 8, 'accessories', NULL),
+(6, '狗狗潔牙骨(10入)', 200.00, 58, 'food', NULL),
 (7, '小動物跑輪', 300.00, 24, 'toy', NULL),
 (8, '貓咪零食 - 鮪魚條', 90.00, 79, 'food', NULL),
 (9, '智能餵食器', 1990.00, 10, 'accessories', NULL),
-(10, '犬用牽繩 (紅色)', 250.00, 35, 'accessories', NULL),
-(11, '寵物洗毛精 500ml', 180.00, 45, 'accessories', NULL),
+(10, '犬用牽繩 (紅色)', 250.00, 34, 'accessories', NULL),
+(11, '寵物洗毛精 500ml', 180.00, 38, 'accessories', NULL),
 (12, '貓跳台 四層', 1680.00, 5, 'accessories', NULL),
 (13, '狗狗雨衣 (M號)', 420.00, 20, 'accessories', NULL),
 (14, '寵物提籃 (小型犬/貓)', 750.00, 5, 'accessories', NULL),
 (15, '兔子飼料 1.5kg', 320.00, 18, 'food', NULL),
-(16, '狗狗玩具 - 發聲球', 150.00, 50, 'toy', NULL),
+(16, '狗狗玩具 - 發聲球', 150.00, 48, 'toy', NULL),
 (17, '貓用逗貓棒', 90.00, 70, 'toy', NULL),
 (18, '倉鼠木屑 (無塵)', 110.00, 39, 'accessories', NULL),
 (19, '水龜濾水器', 1350.00, 7, 'accessories', NULL),
@@ -270,7 +306,12 @@ INSERT INTO `user_role` (`id`, `account_id`, `role_id`) VALUES
 (1, 1, 1),
 (2, 1, 2),
 (3, 2, 2),
-(4, 3, 2);
+(4, 3, 2),
+(5, 4, 2),
+(6, 5, 2),
+(7, 6, 2),
+(8, 7, 2),
+(9, 8, 2);
 
 --
 -- 已傾印資料表的索引
@@ -339,7 +380,7 @@ ALTER TABLE `user_role`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `action`
@@ -351,7 +392,7 @@ ALTER TABLE `action`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=13;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=23;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `product`
@@ -375,7 +416,7 @@ ALTER TABLE `role_action`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `user_role`
 --
 ALTER TABLE `user_role`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- 已傾印資料表的限制式

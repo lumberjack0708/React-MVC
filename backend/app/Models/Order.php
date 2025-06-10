@@ -3,6 +3,19 @@
     use Vendor\DB;
 
     class Order{
+        // 加入權限控管 - 完全照ProductModel的模式
+        public function getRoles($id){
+            $sql = "SELECT role_id FROM user_role WHERE account_id = ?";
+            $arg = array($id);
+            $response = DB::select($sql, $arg);
+            $result = $response['result'];
+            for ($i=0; $i < count($result); $i++) { 
+                $result[$i] = $result[$i]['role_id'];    
+            }
+            $response['result'] = $result;
+            return $response;    
+        }
+
         // 店家端：若沒有挾帶`account_id`，則先顯示訂單總覽
         public function getOrders(){
             $sql = "SELECT 

@@ -7,6 +7,8 @@ use Vendor\Controller;
 use Vendor\DB;
 // 匯入權限控管
 use Models\Account as AccountModel;
+use Models\Product as ProductModel;
+use Models\Order as OrderModel;
 use Models\Action;
 
 class AuthMiddleware extends Controller{
@@ -14,8 +16,49 @@ class AuthMiddleware extends Controller{
     private static $id;
 
     public static function checkPermission($action){
+        $id = self::$id;
         
+        // 取得用戶隸屬的的角色(role_id) - 根據action決定用哪個模型
+        $user_roles = [];
         
+        // 產品相關的actions
+        if (in_array($action, ['getProducts', 'newProduct', 'removeProduct', 'updateProduct'])) {
+            $pm = new ProductModel();
+            $response = $pm->getRoles($id);
+            $user_roles = $response['result'];
+        }
+        // 帳戶相關的actions
+        elseif (in_array($action, ['getUsers', 'newUser', 'removeUser', 'updateUser', 'getUser'])) {
+            $am = new AccountModel();
+            $response = $am->getRoles($id);
+            $user_roles = $response['result'];
+        }
+        // 訂單相關的actions
+        elseif (in_array($action, ['getOrders', 'getOrder', 'getOrderStatistics', 'newOrder', 'removeOrder', 'updateOrder', 'getOrderDetail', 'updateOrderStatus'])) {
+            $om = new OrderModel();
+            $response = $om->getRoles($id);
+            $user_roles = $response['result'];
+        }
+        // 預設使用ProductModel（照原本的模式）
+        else {
+            $pm = new ProductModel();
+            $response = $pm->getRoles($id);
+            $user_roles = $response['result'];
+        }
+        
+        // 取得這個動作有誰能做(action_roles)
+        $actionModel = new Action();
+        $response = $actionModel->getRoles($action);
+        $action_roles = $response['result'];
+        
+        // 判斷user_roles與action_roles是否有交集，有交集就放行，沒有交集就返回403
+        $r = array_intersect($user_roles, $action_roles);
+        if(count($r) > 0){
+            return self::response(200, "權限通過");
+        }
+        else{
+            return self::response(403, "權限不足");
+        }
     }
     
     public static function checkToken(){
@@ -32,11 +75,12 @@ class AuthMiddleware extends Controller{
         $secret_key = "1234";
         try {
             $payload = JWT::decode($jwt, new Key($secret_key, 'HS256'));
-            $accountId = $payload->data->account_id;
+            self::$id = $payload->data->account_id;
+            // $accountId = $payload->data->account_id;
 
             // 根據 token 中的 account_id 獲取用戶資料
             $sql = "SELECT account_id, account_code, role_id, email, full_name, addr, birth FROM account WHERE account_id = ?";
-            $userResult = DB::select($sql, [$accountId]);
+            $userResult = DB::select($sql, [self::$id]);
 
             if (empty($userResult['result'])) {
                 throw new Exception('找不到此 token 對應的用戶');

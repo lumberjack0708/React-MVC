@@ -3,6 +3,19 @@ namespace Models;
 use Vendor\DB;
 
 class Account {
+    // 加入權限控管 - 完全照ProductModel的模式
+    public function getRoles($id){
+        $sql = "SELECT role_id FROM user_role WHERE account_id = ?";
+        $arg = array($id);
+        $response = DB::select($sql, $arg);
+        $result = $response['result'];
+        for ($i=0; $i < count($result); $i++) { 
+            $result[$i] = $result[$i]['role_id'];    
+        }
+        $response['result'] = $result;
+        return $response;    
+    }
+
     // 獲取所有或單一帳戶資訊
     public function getAccounts($accountId = null) {
         if ($accountId !== null) {

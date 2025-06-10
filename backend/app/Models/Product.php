@@ -3,6 +3,19 @@
     use Vendor\DB;
 
     class Product{
+        // 加入權限控管
+        public function getRoles($id){
+            $sql = "SELECT role_id FROM user_role WHERE account_id = ?";
+            $arg = array($id);
+            $response = DB::select($sql, $arg);
+            $result = $response['result'];
+            for ($i=0; $i < count($result); $i++) { 
+                $result[$i] = $result[$i]['role_id'];    
+            }
+            $response['result'] = $result;
+            return $response;    
+        }
+        
         public function getProducts(){
             $sql = "SELECT  *  FROM  `product`";
             $arg = NULL;

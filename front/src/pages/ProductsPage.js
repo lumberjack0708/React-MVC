@@ -56,7 +56,12 @@ function ProductsPage() {
       setError(null);
       try {
         const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({}));
-        setProducts(response.data.result || []);
+        // 將 product_id 映射為 id，以符合前端期望的資料結構
+        const mappedProducts = (response.data.result || []).map(product => ({
+          ...product,
+          id: product.product_id // 將 product_id 映射為 id
+        }));
+        setProducts(mappedProducts);
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || '載入產品時發生未知錯誤';
         setError(errorMessage);
@@ -198,7 +203,7 @@ function ProductsPage() {
       {/* 產品列表 */}
       <Row gutter={[16, 16]}>
         {filteredProducts.map(product => (
-          <Col xs={24} sm={12} md={8} key={product.id}>
+          <Col xs={24} sm={12} md={8} key={product.id || product.product_id}>
             <Badge.Ribbon 
               text={
                 product.category === 'food' ? '食品' :

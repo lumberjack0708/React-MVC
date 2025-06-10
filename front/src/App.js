@@ -28,7 +28,7 @@ import 'normalize.css';
 // 引入新的工具函式
 import Request from './utils/Request';
 import { getToken, removeToken, setToken } from './utils/auth';
-import { getApiUrl } from './config';
+import { getApiUrl, API_CONFIG } from './config';
 
 const { Header, Content } = Layout;
 
@@ -69,8 +69,8 @@ function AppContent() {
       }
 
       try {
-        // 使用一個實際存在的 API 來驗證 token（如獲取產品列表）
-        const res = await Request().post(getApiUrl('getProducts'), '');
+        // 直接呼叫後端根 API 以驗證 token 是否有效
+        const res = await Request().get(API_CONFIG.baseURL);
         const response = res.data;
         if (response.status === 200) {
           // Token 有效，更新 token 和使用者狀態

@@ -36,4 +36,15 @@ const Request = () => {
   return instance;
 };
 
+// let jwtToken = window.localStorage.getItem('jwtToken');
+// if(!jwtToken){
+//   jwtToken = "000";
+// }
+
+// const req = axios.create({
+//   baseURL: "http://localhost/FinalProj/backend/public/",
+//   headers: {'Auth': jwtToken}
+// });
+// return req;
+
 export default Request; 

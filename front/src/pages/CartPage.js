@@ -134,7 +134,7 @@ function CartPage() {
                           size="small"
                           onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                         />
-                        <Text style={CartQuantityText}>{item.quantity}</Text>
+                        <CartQuantityText>{item.quantity}</CartQuantityText>
                         <Button
                           type="text"
                           icon={<PlusOutlined />}

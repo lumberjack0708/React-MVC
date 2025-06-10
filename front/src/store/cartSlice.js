@@ -7,11 +7,20 @@ const cartSlice = createSlice({
   reducers: {
     // 添加商品到購物車
     addToCart: (state, action) => {
-      const existingIndex = state.items.findIndex(item => item.id === action.payload.id);
+      const productId = action.payload.id || action.payload.product_id;
+      const existingIndex = state.items.findIndex(item => 
+        (item.id || item.product_id) === productId
+      );
+      
       if (existingIndex >= 0) {
         state.items[existingIndex].quantity += 1;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        const productItem = {
+          ...action.payload,
+          id: productId, // 確保統一使用 id
+          quantity: 1
+        };
+        state.items.push(productItem);
       }
     },
     

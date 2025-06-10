@@ -7,7 +7,7 @@ function generateToken($userData) {
     $issuer_claim = "http://localhost";
     $audience_claim = "http://localhost";
     $issuedat_claim = time(); // issued at
-    $expire_claim = $issuedat_claim + 60; 
+    $expire_claim = $issuedat_claim + 3600; 
     
     $payload = array(
         "iss" => $issuer_claim,

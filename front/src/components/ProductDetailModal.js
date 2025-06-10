@@ -60,7 +60,13 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
           key="submit"
           type="primary"
           icon={<ShoppingCartOutlined />}
-          onClick={() => onAddToCart(product)}
+          onClick={() => {
+            const productWithId = {
+              ...product,
+              id: product.id || product.product_id
+            };
+            onAddToCart(productWithId);
+          }}
         >
           加入購物車
         </Button>,

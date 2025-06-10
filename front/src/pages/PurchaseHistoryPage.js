@@ -1,13 +1,13 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Typography, Tag, Space, Spin, Empty, Statistic, Row, Col, Button, Modal, Descriptions, Popconfirm, message, Result } from 'antd';
-import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ShoppingOutlined, CalendarOutlined, DollarOutlined, EyeOutlined, ShoppingCartOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { getApiUrl } from '../config';
 import { useNotification } from '../components/Notification';
 import { Container, Heading } from '../styles/styles';
 import { LoadingContainer, LoadingTitle, ErrorContainer, StatisticRowStyle, SmallTextStyle, ModalLoadingContainer, LoadingDetailText } from '../styles/pageStyles';
 import Request from '../utils/Request';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
@@ -30,6 +30,24 @@ function PurchaseHistoryPage({ user }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [isTokenExpired, setIsTokenExpired] = useState(false);
+
+  // 新增：Token過期檢測函數
+  const checkTokenExpiry = (response) => {
+    if (response?.data?.status === 401 || response?.data?.status === 403) {
+      const message = response.data.message || '';
+      if (message.includes('Expired token') || 
+          message.includes('Token無效') || 
+          message.includes('Token過期') ||
+          message.includes('Missing authentication token')) {
+        setIsTokenExpired(true);
+        removeToken(); // 清除過期的token
+        notify.error('登入過期', '您的登入權限已過期，請重新登入');
+        return true;
+      }
+    }
+    return false;
+  };
 
   useEffect(() => {
     // 如果沒有用戶資訊或 token，不進行資料請求
@@ -47,10 +65,20 @@ function PurchaseHistoryPage({ user }) {
           Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: user.account_id }))
         ]);
         
+        // 檢查訂單資料的Token狀態
+        if (checkTokenExpiry(ordersResponse)) {
+          return;
+        }
+        
         if (ordersResponse.data.status === 200) {
           setOrders(ordersResponse.data.result || []);
         } else {
           throw new Error(ordersResponse.data.message || '無法獲取購買紀錄');
+        }
+        
+        // 檢查統計資料的Token狀態
+        if (checkTokenExpiry(statsResponse)) {
+          return;
         }
         
         if (statsResponse.data.status === 200) {
@@ -59,6 +87,11 @@ function PurchaseHistoryPage({ user }) {
           console.warn('無法獲取統計數據:', statsResponse.data.message);
         }
       } catch (err) {
+        // 檢查網路錯誤中的Token狀態
+        if (checkTokenExpiry(err.response)) {
+          return;
+        }
+        
         const errorMessage = err.response?.data?.message || err.message || '載入購買紀錄時發生未知錯誤';
         setError(errorMessage);
         notify.error('載入失敗', errorMessage);
@@ -81,12 +114,24 @@ function PurchaseHistoryPage({ user }) {
         Qs.stringify({ order_id: orderId })
       );
       
+      // 檢查Token過期
+      if (checkTokenExpiry(response)) {
+        setIsDetailModalVisible(false);
+        return;
+      }
+      
       if (response.data && response.data.status === 200) {
         setSelectedOrder(response.data.result || []);
       } else {
         throw new Error(response.data.message || '無法獲取訂單詳情');
       }
     } catch (err) {
+      // 檢查網路錯誤中的Token狀態
+      if (checkTokenExpiry(err.response)) {
+        setIsDetailModalVisible(false);
+        return;
+      }
+      
       const errorMessage = err.response?.data?.message || err.message || '獲取訂單詳情失敗';
       notify.error('獲取詳情失敗', errorMessage);
       console.error("獲取訂單詳情失敗:", err);
@@ -115,6 +160,12 @@ function PurchaseHistoryPage({ user }) {
           account_id: user.account_id
         })
       );
+      
+      // 檢查Token過期
+      if (checkTokenExpiry(response)) {
+        return;
+      }
+      
       if (response.data.status === 200) {
         message.success(response.data.message || '訂單已成功取消');
         // 重新獲取數據
@@ -122,12 +173,23 @@ function PurchaseHistoryPage({ user }) {
           Request().post(getApiUrl('getOrder'), Qs.stringify({ account_id: user.account_id })),
           Request().post(getApiUrl('getOrderStatistics'), Qs.stringify({ account_id: user.account_id }))
         ]);
+        
+        // 檢查重新獲取資料時的Token狀態
+        if (checkTokenExpiry(ordersResponse) || checkTokenExpiry(statsResponse)) {
+          return;
+        }
+        
         setOrders(ordersResponse.data.result || []);
         setStatistics(statsResponse.data.result || {});
       } else {
         message.error(response.data.message || '取消訂單失敗');
       }
     } catch (error) {
+      // 檢查網路錯誤中的Token狀態
+      if (checkTokenExpiry(error.response)) {
+        return;
+      }
+      
       message.error('網路錯誤，無法取消訂單');
     } finally {
       setLoading(false);
@@ -267,6 +329,30 @@ function PurchaseHistoryPage({ user }) {
       render: (text) => `NT$ ${parseInt(text, 10)}`
     }
   ];
+
+  // Token過期時顯示警告頁面
+  if (isTokenExpired) {
+    return (
+      <Container>
+        <Card>
+          <Result
+            status="403"
+            title="登入權限已過期"
+            subTitle="您的Token已過期，請重新登入以繼續使用。"
+            icon={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
+            extra={[
+              <Button type="primary" key="login" onClick={() => navigate('/')}>
+                重新登入
+              </Button>,
+              <Button key="home" onClick={() => navigate('/')}>
+                返回首頁
+              </Button>
+            ]}
+          />
+        </Card>
+      </Container>
+    );
+  }
 
   // 未登入時顯示提示頁
   if (!token || !user) {

@@ -5,6 +5,17 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [2.0.0] - 2025-06-10
+### 新增
+- JWT&Token登入機制，串接前後端，並將Token時效設定為一小時
+- 【購買紀錄】防呆機制，新增Token過期時的防呆機制，從根源上避免Token過期的時候會狂刷錯誤的問題
+  
+### Todo
+- Token過期後購買紀錄沒有相對應的頁面顯示，而是不斷跳錯誤訊息，很醜!
+
+### 已修正
+- 修正前幾個版本登入之後所有頁面皆無法正常使用的問題，是因為在`backend/routes/web.php`檔案中註冊了錯誤的路由(不屬於中介層的路由)，而這些`include_once`語句會這些程式碼，進而產生錯誤
+
 ## [1.1.0] - 2025-06-07
 
 ### 新增

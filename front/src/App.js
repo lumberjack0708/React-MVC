@@ -243,13 +243,17 @@ function AppContent() {
                   style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                 />
               </Dropdown>
-              <Button 
-                type="primary" 
-                shape="circle" 
-                icon={<ShopOutlined />}
-                onClick={handleStoreIconClick}
-                title="店家管理"
-              />
+              
+              {/* 只有管理員 (role_id === 1) 才能看到店家管理按鈕 */}
+              {user?.role_id === 1 && (
+                <Button 
+                  type="primary" 
+                  shape="circle" 
+                  icon={<ShopOutlined />}
+                  onClick={handleStoreIconClick}
+                  title="店家管理"
+                />
+              )}
             </>
           ) : (
             <>
@@ -268,13 +272,8 @@ function AppContent() {
                 onClick={handleUserIconClick}
                 title="用戶資訊"
               />
-              <Button 
-                type="primary" 
-                shape="circle" 
-                icon={<ShopOutlined />}
-                onClick={handleStoreIconClick}
-                title="店家管理"
-              />
+              
+              {/* 未登入時也不顯示店家管理按鈕 */}
             </>
           )}
         </div>
@@ -282,16 +281,20 @@ function AppContent() {
       <Content style={{ padding: '0 50px', marginTop: '16px' }}>
         <div className="site-content" style={{ minHeight: 280, padding: 24, background: token.colorBgContainer, borderRadius: '4px' }}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/" element={<HomePage user={user} isLoggedIn={isLoggedIn} onLoginRequest={handleLoginClick} />} />
+            <Route path="/products" element={<ProductsPage user={user} isLoggedIn={isLoggedIn} onLoginRequest={handleLoginClick} />} />
             <Route path="/purchase-history" element={<PurchaseHistoryPage user={user} />} />
             <Route path="/cart" element={<CartPage user={user} />} />
             <Route path="/user-profile" element={<UserProfilePage user={user} />} />
-            {/* 店家管理路由 */}
-            <Route path="/store" element={<StoreLayout />}>
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="orders" element={<OrderManagement />} />
-            </Route>
+            
+            {/* 只有管理員才能訪問店家管理 */}
+            {user?.role_id === 1 && (
+              <Route path="/store" element={<StoreLayout />}>
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="orders" element={<OrderManagement />} />
+              </Route>
+            )}
+            
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

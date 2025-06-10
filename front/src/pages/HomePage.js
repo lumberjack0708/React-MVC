@@ -31,7 +31,7 @@ const { Title, Paragraph, Text } = Typography;
  *              推薦商品模擬從伺服器取得，並可直接加入購物車。
  * @returns {JSX.Element} 返回首頁的 JSX 結構。
  */
-function HomePage() {
+function HomePage({ user, isLoggedIn, onLoginRequest }) {
   const navigate = useNavigate();       // 用於頁面導覽
   const dispatch = useDispatch();       // 使用 dispatch 發送 Redux actions
   const { notify } = useNotification(); // 取得通知顯示函數
@@ -55,6 +55,19 @@ function HomePage() {
   
   // 處理添加商品到購物車
   const handleAddToCart = (product) => {
+    // 檢查用戶是否已登入
+    if (!isLoggedIn || !user) {
+      notify.warning(
+        '請先登入', 
+        '您需要先登入才能將商品加入購物車！'
+      );
+      // 觸發登入彈窗
+      if (onLoginRequest) {
+        onLoginRequest();
+      }
+      return;
+    }
+
     dispatch(addToCart(product));
     notify.success(
       '已加入購物車', 

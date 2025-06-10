@@ -21,7 +21,7 @@ class Account extends Controller
     }
     
     public function getUser(){
-        return $this->getUser();
+        return $this->getUsers();
     }
     
     public function newUser(){

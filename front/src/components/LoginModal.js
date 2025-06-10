@@ -5,6 +5,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import Request from '../utils/Request';
 import { setToken } from '../utils/auth';
 import { getApiUrl } from '../config';
+import { tokenManager } from '../utils/tokenManager';
 
 const LoginModal = ({ visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
@@ -24,6 +25,7 @@ const LoginModal = ({ visible, onCancel, onSuccess }) => {
       if (response.status === 200) {
         message.success('登入成功！');
         setToken(response.token);
+        tokenManager.reset();
         onSuccess(response);
         form.resetFields();
         onCancel();

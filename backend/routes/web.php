@@ -19,6 +19,7 @@ $router->register(action: 'updateSupplier', class: 'Supplier', method:'updateSup
 
 // 使用者帳戶資料相關路由 (Account)
 $router->register(action: 'getUsers', class: 'Account', method: 'getUsers');
+$router->register(action: 'getUser', class: 'Account', method: 'getUser');
 $router->register(action: 'newUser', class: 'Account', method: 'newUser');
 $router->register(action: 'removeUser', class: 'Account', method: 'removeUser');
 $router->register(action: 'updateUser', class: 'Account', method: 'updateUser');

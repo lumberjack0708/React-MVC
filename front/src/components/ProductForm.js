@@ -11,12 +11,13 @@ const ProductForm = ({ form, initialValues }) => {
     // 從編輯模式切換到新增模式時，initialValues 會變成 null
     if (initialValues) {
       form.setFieldsValue({
-        ...initialValues,
-        price: parseInt(initialValues.price, 10), // 明確轉換價格為數字
-        // 如果有 image_url，建立一個符合 antd Upload 元件格式的 fileList
+        p_name: initialValues.name,
+        price: parseInt(initialValues.price, 10),
+        stock: initialValues.stock,
+        category: initialValues.category,
         image: initialValues.image_url ? [{
           uid: '-1',
-          name: initialValues.image_url.split('/').pop(), // 從路徑中取出檔名
+          name: initialValues.image_url.split('/').pop(),
           status: 'done',
           url: `${API_CONFIG.assetBaseURL}public/${initialValues.image_url}`,
         }] : [],
@@ -36,7 +37,7 @@ const ProductForm = ({ form, initialValues }) => {
   return (
     <Form form={form} layout="vertical" name="product_form">
       <Form.Item
-        name="name"
+        name="p_name"
         label="商品名稱"
         rules={[{ required: true, message: '請輸入商品名稱！' }]}
       >

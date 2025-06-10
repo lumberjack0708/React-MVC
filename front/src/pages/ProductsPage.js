@@ -32,7 +32,7 @@ const { Option } = Select;
  * @returns {JSX.Element} 返回商品頁面的 JSX 結構。
  */
 
-function ProductsPage() {
+function ProductsPage({ user, isLoggedIn, onLoginRequest }) {
   const { notify } = useNotification();
   
   const dispatch = useDispatch();  // Redux dispatch
@@ -97,6 +97,19 @@ function ProductsPage() {
   
   // 添加商品到購物車的處理函數
   const handleAddToCart = (product) => {
+    // 檢查用戶是否已登入
+    if (!isLoggedIn || !user) {
+      notify.warning(
+        '請先登入', 
+        '您需要先登入才能將商品加入購物車！'
+      );
+      // 觸發登入彈窗
+      if (onLoginRequest) {
+        onLoginRequest();
+      }
+      return;
+    }
+
     dispatch(addToCart(product));
     notify.success(
       '已加入購物車', 

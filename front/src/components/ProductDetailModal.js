@@ -10,6 +10,8 @@ import {
   Statistic 
 } from 'antd';
 import { ShoppingCartOutlined } from '@ant-design/icons';
+import { getProductImage } from '../assets/images/index';
+import { API_CONFIG } from '../config';
 
 const { Paragraph } = Typography;
 
@@ -76,7 +78,11 @@ function ProductDetailModal({ product, onClose, onAddToCart }) {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div style={{ textAlign: 'center', margin: '20px 0' }}>
           <Image
-            src={product.imageSource}
+            src={
+              product.image_url
+                ? `${API_CONFIG.assetBaseURL}public/${product.image_url}`
+                : getProductImage(product.category, product.name)
+            }
             alt={product.name}
             style={{ maxHeight: '300px', objectFit: 'contain' }}
           />

@@ -9,12 +9,26 @@
 ### 新增
 - JWT&Token登入機制，串接前後端，並將Token時效設定為一小時
 - 【購買紀錄】防呆機制，新增Token過期時的防呆機制，從根源上避免Token過期的時候會狂刷錯誤的問題
+- 新增`Account.php`、`Order.php`、`Product.php`等檔案的權限控管至`Action.php`、`AuthMIddleware.php`、`main.php`
   
 ### Todo
 - Token過期後購買紀錄沒有相對應的頁面顯示，而是不斷跳錯誤訊息，很醜!
 
-### 已修正
+### Fixed
 - 修正前幾個版本登入之後所有頁面皆無法正常使用的問題，是因為在`backend/routes/web.php`檔案中註冊了錯誤的路由(不屬於中介層的路由)，而這些`include_once`語句會這些程式碼，進而產生錯誤
+- 修改 `ProductForm.js` 將 `name` 改為 `p_name`，解決無法正常新增/刪除商品的問題
+- 修正原先兩個身分都無法訪問`action=getUser`的問題，原因是因為原先的做法是透過傳入參數給`action=getUsers`來進入`getUser()`，但這樣的方法會因為一般使用者無法訪問`action=getUsers`的原因而被擋下
+- 修正邏輯錯誤: 未登入的人按下【加入購物車】後會被擋下來
+  1.  阻止加入購物車 
+  2.  顯示警告訊息 - 使用 `notify.warning` 提示用戶需要先登入
+  3.  自動彈出登入視窗呼叫`onLoginRequest()`(`Homepage.js`、`ProductsPage.js`)
+- 修正產品詳情模態視窗(`ProductDetailModal.js`)的圖片顯示問題，原本的路徑現在已不存在，更新為新的`API_CONFIG`配置
+
+### Changed
+- 將原本全域可見的右上角店家管理按鈕更新為`user?.role_id === 1`才可見，並且在`App.js`的路由設定中設有一樣的邏輯閥確定只有Admin身分可以訪問
+- 將`action=getProducts`改為開放權限，未登入也可以訪問
+- 將`Style.js`中的`ProductImage`樣式元件移除滑鼠懸停圖片放大效果，避免懸停時會截斷商品卡陰影的情況發生
+
 
 ## [1.1.0] - 2025-06-07
 

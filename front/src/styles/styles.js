@@ -63,11 +63,6 @@ export const ProductImage = styled.img`
   object-fit: contain;
   border-radius: 4px;
   background-color: #f9f9f9;
-  transition: transform 0.3s ease;
-  
-  &:hover {
-    transform: scale(1.05);
-  }
 `;
 
 // 價格標籤樣式

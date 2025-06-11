@@ -97,6 +97,16 @@ cd FinalProj
 -- 執行 backend/sql/petdeptstore.sql 檔案
 ```
 
+#### 安裝composer依賴
+1. 移動到`backend`目錄
+```bash!
+  cd ...\htdocs\FinalProj\backend
+```
+2. 執行composer install 
+```bash!
+  composer install 
+```
+
 #### 配置後端
 1. 將專案放置於 XAMPP 的 htdocs 目錄
 2. 確保後端 API 可透過 http://localhost/FinalProj/backend/public/index.php 存取

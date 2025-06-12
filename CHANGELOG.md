@@ -6,15 +6,13 @@
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
 ## [3.1.0] - 2025-06-12
-### 新增
+### Added
 - **前端購物車功能完整實現** - 將後端購物車 API 完全整合至前端系統
   - 新增 `cartService.js` 服務層，封裝所有購物車 API 調用，統一錯誤處理和參數格式化
   - 創建 `CartBadge.js` 購物車數量徽章組件，實時顯示購物車商品數量
   - 重構 `CartPage.js` 購物車頁面，移除 Redux 依賴，直接使用後端資料
   - 更新 `ProductsPage.js` 和 `HomePage.js` 的加入購物車功能，改用後端 API
   - 升級 `ProductDetailModal.js` 支援 async 操作和錯誤處理
-
-### 新增功能特色
 - **樂觀更新 (Optimistic Updates)** - 詳見 `optimistic_updates.md`
   - 用戶操作立即反應 UI 變化，背景發送請求
   - 請求失敗時自動回滾至原始狀態
@@ -24,12 +22,12 @@
 - **價格變動提醒** - 顯示商品價格異動，保障消費者權益
 - **完整結帳流程** - 從購物車直接進入訂單建立流程
 
-### 修改
+### Changed
 - 移除 `ProductsPage.js` 和 `HomePage.js` 中的全域 `actionLoading` 狀態
 - 購物車頁面改用獨立的 `checkoutLoading` 狀態管理結帳流程
 - 優化 InputNumber 組件顯示，移除內建加減按鈕避免重複，設置文字居中
 
-### 已修正
+### Fixed
 - 修正 `cartItems.map is not a function` 錯誤，適配後端 `{items: [...], statistics: {...}}` 資料格式
 - 修正樂觀更新實現後的狀態同步問題
 - 修正購物車商品數量更新的邊界值檢查

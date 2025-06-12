@@ -6,16 +6,10 @@ $router->register(action: 'removeProduct', class: 'Product', method: 'removeProd
 $router->register(action: 'updateProduct', class: 'Product', method: 'updateProduct');
 
 // 角色相關路由
-$router->register(action: 'getRoles', class: 'Role', method: 'getRoles');
-$router->register(action: 'newRole', class: 'Role', method: 'newRole');
-$router->register(action: 'removeRole', class: 'Role', method: 'removeRole');
-$router->register(action: 'updateRole', class: 'Role', method: 'updateRole');
-
-// 供應商相關路由
-$router->register(action: 'getSuppliers', class: 'Supplier', method: 'getSuppliers');
-$router->register(action: 'newSupplier', class: 'Supplier', method: 'newSupplier');
-$router->register(action: 'removeSupplier', class: 'Supplier', method:'removeSupplier');
-$router->register(action: 'updateSupplier', class: 'Supplier', method:'updateSupplier');
+// $router->register(action: 'getRoles', class: 'Role', method: 'getRoles');
+// $router->register(action: 'newRole', class: 'Role', method: 'newRole');
+// $router->register(action: 'removeRole', class: 'Role', method: 'removeRole');
+// $router->register(action: 'updateRole', class: 'Role', method: 'updateRole');
 
 // 使用者帳戶資料相關路由 (Account)
 $router->register(action: 'getUsers', class: 'Account', method: 'getUsers');
@@ -33,4 +27,14 @@ $router->register(action: 'removeOrder', class: 'Order', method: 'removeOrder');
 $router->register(action: 'updateOrder', class: 'Order', method: 'updateOrder');
 $router->register(action: 'getOrderDetail', class: 'Order', method: 'getOrderDetail');
 $router->register(action: 'updateOrderStatus', class: 'Order', method: 'updateOrderStatus');    # 更新訂單狀態
+
+// 購物車相關路由
+$router->register(action: 'getCart', class: 'Cart', method: 'getCart');
+$router->register(action: 'addToCart', class: 'Cart', method: 'addToCart');
+$router->register(action: 'removeFromCart', class: 'Cart', method: 'removeFromCart');
+$router->register(action: 'updateCartItem', class: 'Cart', method: 'updateCartItem');
+$router->register(action: 'clearCart', class: 'Cart', method: 'clearCart');
+$router->register(action: 'getCartStatistics', class: 'Cart', method: 'getCartStatistics');     # 顧客端：獲取該帳號的購物車統計資料
+
+
 ?>

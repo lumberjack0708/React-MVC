@@ -44,7 +44,13 @@ class DB extends Controller{
         $result = $stmt->execute($args);
         if ($result) {
             $count = $stmt->rowCount();
-            return ($count < 1) ? self::response(204, "新增失敗") : self::response(200, "新增成功");
+            if ($count < 1) {
+                return self::response(204, "新增失敗");
+            } else {
+                // 獲取最後插入的 ID
+                $insertId = self::$conn->lastInsertId();
+                return self::response(200, "新增成功", null, $insertId);
+            }
         } else {
             return self::response(400, "SQL錯誤");
         }

@@ -17,7 +17,7 @@
 
 ### 狀態管理
 - **React Hooks (`useState`, `useEffect`, `useContext`)** - 主要的狀態管理機制，用於頁面本地狀態和跨元件共享狀態。
-- **Redux Toolkit 2.8.2 / React Redux 9.2.0** - **（逐步棄用）** 目前僅用於 `App.js` 的頁首購物車數量徽章，未來將被移除。
+- **Redux Toolkit 2.8.2 / React Redux 9.2.0** - **（混合使用）** 用於全域狀態管理，如購物車數量徽章、跨頁面狀態同步等。與 API 驅動的本地狀態管理並行使用。
 
 ### 樣式與動畫
 - **@emotion/react 11.14.0** & **@emotion/styled 11.14.0** - CSS-in-JS 樣式方案，用於撰寫元件級別的動態樣式。
@@ -111,10 +111,14 @@ flowchart TB
 - 用於提供全域功能，而非全域資料。
 - **`NotificationProvider` (`components/Notification.js`)**: 透過 Context 提供一個全域的 `notify` 函數，讓任何元件都能輕易地觸發成功、失敗、警告等通知，而無需透過 props 逐層傳遞。
 
-### 3. 遺留全域狀態 (Legacy Global State) - `Redux Toolkit`
-- Redux 在專案中正被逐步淘汰。目前**唯一**的用途是管理**頁首導覽列的購物車數量徽章**。
-- **`store/cartSlice.js`**: 定義了舊的購物車狀態邏輯，其 `selectCartItemCount` 選擇器仍被 `App.js` 使用。
-- **未來計畫**: 將 `CartBadge.js` 組件重構，使其能獨立獲取和更新購物車數量（例如，透過 `cartService`），然後從專案中完全移除 Redux。
+### 3. 混合全域狀態 (Hybrid Global State) - `Redux Toolkit`
+- Redux 與 API 驅動架構**並行使用**，各自負責不同的狀態管理需求。
+- **`store/cartSlice.js`**: 管理全域購物車狀態，主要用於跨頁面的狀態同步和 UI 反饋。
+- **使用場景**:
+  - **購物車數量徽章**: 在導覽列顯示即時的購物車商品總數
+  - **跨頁面狀態同步**: 當在商品頁加入購物車時，徽章立即更新
+  - **全域 UI 狀態**: 如全域載入狀態、主題設定等
+- **與 API 的協作**: Redux 狀態作為 UI 快取，API 作為資料來源，兩者互補使用
 
 ## React Hooks 使用詳解
 
@@ -147,7 +151,7 @@ front/
 ├── public/                 # 靜態資源 (index.html, manifest.json)
 ├── src/
 │   ├── components/         # 共用元件
-│   │   ├── CartBadge.js      # 【新】購物車數量徽章，應重構以移除Redux依賴
+│   │   ├── CartBadge.js      # 【新】購物車數量徽章
 │   │   ├── LoginModal.js     # 登入彈窗
 │   │   ├── Notification.js   # 全域通知系統 (Provider & Hook)
 │   │   └── ProductDetailModal.js # 商品詳情彈窗

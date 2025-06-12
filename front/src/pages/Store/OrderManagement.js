@@ -1,6 +1,7 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, Space, Typography, notification, Select, Button, Modal, message } from 'antd';
+import { Table, Tag, Space, Typography, notification, Select, Button, Modal, message, Popconfirm, Tooltip } from 'antd';
+import { EyeOutlined, CloseCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { getApiUrl, API_CONFIG } from '../../config';
 import Request from '../../utils/Request';
 import { getToken } from '../../utils/auth';
@@ -8,7 +9,7 @@ import { getToken } from '../../utils/auth';
 const { Title } = Typography;
 const { Option } = Select;
 
-const OrderManagement = () => {
+const OrderManagement = () => {  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
@@ -94,69 +95,11 @@ const OrderManagement = () => {
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
-    // 如果是要取消訂單，使用正確的取消訂單API
-    if (newStatus === 'cancelled') {
-      Modal.confirm({
-        title: '確認取消訂單',
-        content: `您確定要取消訂單 #${orderId} 嗎？此操作無法復原，商品庫存將會自動回滾。`,
-        okText: '確認取消',
-        cancelText: '保持原狀',
-        okType: 'danger',
-        onOk: () => handleCancelOrder(orderId),
-      });
-      return;
-    }
+    console.log('handleStatusChange 被調用:', { orderId, newStatus }); // 添加調試
     
-    // 其他狀態直接更新
+    // 直接更新狀態，不再處理取消邏輯
+    console.log('更新訂單狀態為:', newStatus); // 添加調試
     updateOrderStatus(orderId, newStatus);
-  };
-
-  // 新增：正確的取消訂單功能（包含庫存回滾）
-  const handleCancelOrder = async (orderId) => {
-    // 添加調試資訊
-    console.log('當前用戶資訊:', currentUser);
-    console.log('用戶角色:', currentUser?.role_id);
-    console.log('用戶ID:', currentUser?.account_id);
-    
-    if (!currentUser || !currentUser.account_id) {
-      notification.error({
-        message: '認證錯誤',
-        description: '無法獲取用戶身份，請重新登入。',
-      });
-      return;
-    }
-
-    setLoading(true);
-    const url = getApiUrl('removeOrder');
-    const data = {
-      order_id: orderId,
-      account_id: currentUser.account_id // 使用當前登入用戶的ID
-    };
-
-    console.log('發送的資料:', data);
-
-    try {
-      const response = await Request().post(url, Qs.stringify(data));
-      console.log('後端響應:', response.data);
-      
-      if (response.data.status === 200) {
-        message.success(`訂單 #${orderId} 已成功取消，庫存已回滾`);
-        fetchOrders(); // 重新載入訂單
-      } else {
-        notification.error({
-          message: '取消失敗',
-          description: response.data.message || '無法取消訂單。',
-        });
-      }
-    } catch (error) {
-      console.error('取消訂單錯誤:', error);
-      notification.error({
-        message: '請求錯誤',
-        description: '無法連接到伺服器。',
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
@@ -188,6 +131,57 @@ const OrderManagement = () => {
     }
   };
 
+  // 取消訂單功能（包含庫存回滾）
+  const handleCancelOrder = async (orderId) => {
+    console.log('handleCancelOrder 被調用:', orderId);
+    console.log('當前用戶資訊:', currentUser);
+    
+    if (!currentUser || !currentUser.account_id) {
+      notification.error({
+        message: '認證錯誤',
+        description: '無法獲取用戶身份，請重新登入。',
+      });
+      return;
+    }
+
+    setLoading(true);
+    const url = getApiUrl('removeOrder');
+    const data = {
+      order_id: orderId,
+      account_id: currentUser.account_id
+    };
+
+    console.log('發送的資料:', data);
+
+    try {
+      const response = await Request().post(url, Qs.stringify(data));
+      console.log('後端響應:', response.data);
+      
+      if (response.data.status === 200) {
+        message.success(`訂單 #${orderId} 已成功取消，庫存已回滾`);
+        fetchOrders(); // 重新載入訂單
+      } else {
+        notification.error({
+          message: '取消失敗',
+          description: response.data.message || '無法取消訂單。',
+        });
+      }
+    } catch (error) {
+      console.error('取消訂單錯誤:', error);
+      notification.error({
+        message: '請求錯誤',
+        description: '無法連接到伺服器。',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 判斷訂單是否可以取消(待處理、處理中才可以取消)
+  const canCancelOrder = (status) => {
+    return status === 'pending' || status === 'processing';
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'gold';
@@ -199,24 +193,41 @@ const OrderManagement = () => {
   };
 
   const columns = [
-    { title: '訂單編號', dataIndex: '訂單編號', key: 'id' },
-    { title: '顧客Email', dataIndex: '用戶email', key: 'email' },
+    { 
+      title: '訂單編號', 
+      dataIndex: '訂單編號', 
+      key: 'id',
+      width: 100,
+      render: (text) => <span style={{ fontWeight: 500 }}>#{text}</span>
+    },
+    { 
+      title: '顧客Email', 
+      dataIndex: '用戶email', 
+      key: 'email',
+      width: 200,
+      ellipsis: true
+    },
     { 
       title: '訂單總金額', 
       dataIndex: '訂單總金額', 
       key: 'amount',
-      render: (amount) => `NT$ ${parseInt(amount, 10)}`
+      width: 120,
+      align: 'right',
+      render: (amount) => <span style={{ fontWeight: 500, color: '#52c41a' }}>NT$ {parseInt(amount, 10)}</span>
     },
     { 
       title: '訂單時間', 
       dataIndex: '訂單時間', 
       key: 'time',
-      render: (time) => new Date(time).toLocaleString()
+      width: 160,
+      render: (time) => new Date(time).toLocaleString('zh-TW')
     },
     {
       title: '訂單狀態',
       dataIndex: '訂單狀態',
       key: 'status',
+      width: 100,
+      align: 'center',
       render: (status) => {
         const statusMap = {
           'pending': '待處理',
@@ -234,20 +245,60 @@ const OrderManagement = () => {
     {
       title: '操作',
       key: 'action',
+      width: 280,
       render: (_, record) => (
-        <Space>
+        <Space size="small">
           <Select
-            defaultValue={record['訂單狀態']}
-            style={{ width: 120 }}
-            onChange={(value) => handleStatusChange(record['訂單編號'], value)}
+            value={record['訂單狀態']}
+            style={{ width: 100 }}
+            size="small"
+            onChange={(value) => {
+              console.log('Select onChange 觸發:', { orderId: record['訂單編號'], value });
+              handleStatusChange(record['訂單編號'], value);
+            }}
             disabled={['shipped', 'cancelled'].includes(record['訂單狀態'])}
           >
             <Option value="pending">待處理</Option>
             <Option value="processing">處理中</Option>
             <Option value="shipped">已出貨</Option>
-            <Option value="cancelled">已取消</Option>
           </Select>
-          <Button onClick={() => handleViewDetails(record['訂單編號'])}>查看詳情</Button>
+          
+          <Tooltip title="查看訂單詳情">
+            <Button 
+              type="default"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record['訂單編號'])}
+            >
+              詳情
+            </Button>
+          </Tooltip>
+          
+          {canCancelOrder(record['訂單狀態']) && (
+            <Tooltip title="取消此訂單並回滾庫存">
+              <Popconfirm
+                title="確定要取消這個訂單嗎？"
+                description="取消後將無法恢復，商品庫存會自動回滾。"
+                onConfirm={() => handleCancelOrder(record['訂單編號'])}
+                okText="確定取消"
+                cancelText="保留訂單"
+                okType="danger"
+                icon={<CloseCircleOutlined style={{ color: 'red' }} />}
+              >
+                <Button 
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  style={{ 
+                    borderRadius: '4px'
+                  }}
+                >
+                  取消
+                </Button>
+              </Popconfirm>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -268,7 +319,13 @@ const OrderManagement = () => {
         dataSource={orders} 
         rowKey="訂單編號" 
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={{ 
+          pageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆訂單`
+        }}
+        scroll={{ x: 1000 }}
+        size="middle"
       />
       <Modal
         title={`訂單 #${currentOrderDetails[0]?.['訂單編號']} 詳細內容`}

@@ -5,6 +5,13 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [2.2.0] - 2025-06-12
+### Fixed
+- 修正邏輯錯誤: 店家居然無法刪除訂單
+  1. 在前個版本的取消前端中是用`Modal.confirm`來實現，但這樣可能會遇到對話框被 Select 的下拉選單層級遮蓋了，或者存在其他的 z-index 問題(幹其實我也不知道反正我是想說更改狀態跟取消訂單用的是不同API可能會有錯所以就把它分開了 然後就會動了)
+  2. 根據前述，我在這個版本改用了`Popconfirm `元件來獨立顯示「取消」這個按鈕
+  3. 另外打個岔我有想過乾脆要把它們弄回同一支API，因為在好幾個版本以前我是用同一支API操作取消狀態，都是用`updateOrderStatus`，但是這支API有個嚴重的邏輯漏洞是他沒有庫存回滾的邏輯，所以還是只能乖乖取消訂單的問題qq
+
 ## [2.1.0] - 2025-06-12
 ### Fixed
 - 原先的店家訂單管理只有更新狀態API(updateOrderStatus)，卻沒有取消訂單API，在此版本修復了這個問題

@@ -33,54 +33,68 @@
 
 ```mermaid
 flowchart TB
+    %% ----- 前端 -----
     subgraph "瀏覽器環境 (Browser)"
         subgraph "React App"
             Router[React Router v7]
-            Context[React Context<br/>(Notification)]
-            AntD[Ant Design UI]
-            Emotion[Emotion Styled]
-            Redux[(Legacy Redux<br/>Header Badge Only)]
+            Context["React Context<br/>(Notification)"]
+            AntD["Ant Design UI"]
+            Emotion["Emotion Styled"]
+            Redux["Legacy Redux<br/>Header Badge Only"]
         end
-        
+
         subgraph "頁面層 (Pages)"
             HomePage[首頁]
             ProductsPage[商品頁]
-            CartPage[<b>購物車 (API Driven)</b>]
+            CartPage["購物車 (API Driven)"]
             UserProfile[用戶資料]
             StoreManagement[店家管理]
         end
-        
+
         subgraph "服務與元件層 (Services & Components)"
-            CartService[<b>cartService.js</b>]
+            CartService[cartService.js]
             CartBadge[CartBadge.js]
             Components[共用元件]
         end
     end
-    
+
+    %% ----- 後端 -----
     subgraph "後端服務 (Backend)"
         API[PHP REST API]
         DB[(MySQL DB)]
     end
-    
+
     %% --- 路由關係 ---
-    Router --> HomePage & ProductsPage & CartPage & UserProfile & StoreManagement
-    
+    Router --> HomePage
+    Router --> ProductsPage
+    Router --> CartPage
+    Router --> UserProfile
+    Router --> StoreManagement
+
     %% --- 資料流 ---
     CartPage -- hooks --> CartService
     HomePage -- "Add to Cart" --> CartService
     ProductsPage -- "Add to Cart" --> CartService
     StoreManagement -- "Orders, Products" --> API
-
-    CartService -- "axios" --> API
+    CartService -- axios --> API
     API --> DB
 
     %% --- UI 元件關係 ---
     Context --> Components
-    AntD --> Components & HomePage & ProductsPage & CartPage & UserProfile & StoreManagement
+    AntD --> Components
+    AntD --> HomePage
+    AntD --> ProductsPage
+    AntD --> CartPage
+    AntD --> UserProfile
+    AntD --> StoreManagement
     Emotion --> Components
-    
+
     CartBadge -- "fetches data" --> CartService
-    Components --> HomePage & ProductsPage & CartPage & UserProfile & StoreManagement
+    Components --> HomePage
+    Components --> ProductsPage
+    Components --> CartPage
+    Components --> UserProfile
+    Components --> StoreManagement
 
     %% --- 遺留關係 ---
     Redux -.-> CartBadge

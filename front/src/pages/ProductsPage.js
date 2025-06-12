@@ -96,7 +96,7 @@ function ProductsPage({ user, isLoggedIn, onLoginRequest }) {
   };
   
   // 添加商品到購物車的處理函數
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
     // 檢查用戶是否已登入
     if (!isLoggedIn || !user) {
       notify.warning(
@@ -110,11 +110,33 @@ function ProductsPage({ user, isLoggedIn, onLoginRequest }) {
       return;
     }
 
-    dispatch(addToCart(product));
-    notify.success(
-      '已加入購物車', 
-      `${product.name} 已成功加入您的購物車！`
-    );
+    try {
+      // 使用後端API添加到購物車
+      const cartService = (await import('../services/cartService')).default;
+      const response = await cartService.addToCart(
+        user.account_id, 
+        product.id || product.product_id, 
+        1
+      );
+
+      if (response.data.status === 200) {
+        notify.success(
+          '已加入購物車', 
+          `${product.name} 已成功加入您的購物車！`
+        );
+      } else {
+        notify.error(
+          '加入購物車失敗', 
+          response.data.message || '無法將商品加入購物車，請稍後再試。'
+        );
+      }
+    } catch (error) {
+      console.error('加入購物車錯誤:', error);
+      notify.error(
+        '網路錯誤', 
+        '無法連接到伺服器，請檢查您的網路連線。'
+      );
+    }
   };
   
   // 處理排序改變

@@ -5,6 +5,10 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [2.1.0] - 2025-06-12
+### Fixed
+- 原先的店家訂單管理只有更新狀態API(updateOrderStatus)，卻沒有取消訂單API，在此版本修復了這個問題
+
 ## [2.0.0] - 2025-06-10
 ### 新增
 - JWT&Token登入機制，串接前後端，並將Token時效設定為一小時

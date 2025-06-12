@@ -229,35 +229,51 @@
         }
         
         public function removeOrder($order_id, $account_id){
+            // 添加調試資訊
+            error_log("Order Model removeOrder 開始 - order_id: " . $order_id . ", account_id: " . $account_id);
+            
             // 1. 訂單存在性檢查
             $orderSql = "SELECT * FROM `orders` WHERE `order_id` = ?";
             $orderResult = DB::select($orderSql, array($order_id));
 
             if ($orderResult['status'] != 200 || empty($orderResult['result'])) {
+                error_log("訂單不存在：" . $order_id);
                 return array('status' => 404, 'message' => "找不到訂單編號：" . $order_id);
             }
             $order = $orderResult['result'][0];
+            error_log("訂單資料：" . json_encode($order));
 
             // 2. 訂單狀態檢查
             if (in_array($order['status'], ['shipped', 'cancelled'])) {
+                error_log("訂單狀態不允許取消：" . $order['status']);
                 return array('status' => 400, 'message' => "無法取消狀態為「" . $order['status'] . "」的訂單");
             }
 
             // 3. 權限檢查
             $accountSql = "SELECT `role_id` FROM `account` WHERE `account_id` = ?";
             $accountResult = DB::select($accountSql, array($account_id));
+            
+            error_log("用戶查詢SQL：" . $accountSql . " 參數：" . $account_id);
+            error_log("用戶查詢結果：" . json_encode($accountResult));
 
             if ($accountResult['status'] != 200 || empty($accountResult['result'])) {
+                error_log("無法找到用戶：" . $account_id);
                 return array('status' => 403, 'message' => "權限不足，無法取消此訂單");
             }
 
             $userRole = $accountResult['result'][0]['role_id'];
             $is_admin = ($userRole == 1); //  role_id = 1 是管理員
             $is_owner = ($order['account_id'] == $account_id);
+            
+            error_log("權限檢查 - userRole: " . $userRole . ", is_admin: " . ($is_admin ? 'true' : 'false') . ", is_owner: " . ($is_owner ? 'true' : 'false'));
+            error_log("訂單擁有者ID：" . $order['account_id'] . ", 當前操作者ID：" . $account_id);
 
             if (!$is_admin && !$is_owner) {
+                error_log("權限不足 - 既不是管理員也不是訂單擁有者");
                 return array('status' => 403, 'message' => "權限不足，無法取消此訂單");
             }
+            
+            error_log("權限檢查通過，開始處理訂單取消");
             
             try {
                 // 4. 庫存回滾

@@ -80,7 +80,17 @@ class Order extends Controller
         }
         $order_id = $_POST['order_id'];
         $account_id = $_POST['account_id'];
-        return $this->om->removeOrder($order_id, $account_id);
+        
+        // 添加調試資訊
+        error_log("removeOrder 調試 - order_id: " . $order_id);
+        error_log("removeOrder 調試 - account_id: " . $account_id);
+        
+        $result = $this->om->removeOrder($order_id, $account_id);
+        
+        // 調試結果
+        error_log("removeOrder 調試 - 結果: " . json_encode($result));
+        
+        return $result;
     }
     
     public function updateProduct(){

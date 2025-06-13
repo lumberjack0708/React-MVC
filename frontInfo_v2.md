@@ -11,6 +11,214 @@
 
 當前版本整合了 Redux 全域狀態管理與後端 API 的優勢，通過智能選擇器和非同步 thunk 實現了即時的購物車數量同步，同時保持了樂觀更新的流暢體驗。
 
+## 專案依賴套件詳解 (Dependencies & Package Overview)
+
+本節詳細介紹專案中使用的所有 npm 套件及其在專案中的具體功能與應用場景。
+
+### 核心框架套件 (Core Framework Packages)
+
+#### React 生態系統
+- **`react@19.1.0`** & **`react-dom@19.1.0`**
+  - **功能**: React 核心庫和 DOM 渲染器
+  - **應用**: 整個前端應用的基礎，所有頁面元件都基於 React 建構
+  - **特色**: 使用最新的 React 19 版本，支援 Concurrent Features 和 Server Components
+
+- **`react-router-dom@7.6.0`**
+  - **功能**: 客戶端路由管理
+  - **應用**: 
+    - `App.js` 中定義所有頁面路由
+    - `useNavigate` Hook 實現程式化導航
+    - 巢狀路由處理店家管理模組
+  - **關鍵功能**: BrowserRouter, Routes, Route, useNavigate, useLocation
+
+#### 狀態管理套件
+- **`@reduxjs/toolkit@2.8.2`** & **`react-redux@9.2.0`**
+  - **功能**: 現代化 Redux 狀態管理
+  - **應用**: 
+    - `store/cartSlice.js`: 購物車全域狀態管理
+    - `App.js`: 購物車徽章數量同步
+    - `fetchCartStatistics` async thunk 與後端 API 整合
+  - **優勢**: 減少樣板程式碼，內建 Immer 支援不可變更新
+
+### UI 框架與元件庫 (UI Framework & Component Library)
+
+#### Ant Design 生態系統
+- **`antd@5.25.3`**
+  - **功能**: 企業級 React UI 元件庫
+  - **應用範圍**:
+    - **表單元件**: Form, Input, Select, DatePicker (註冊、登入、商品管理)
+    - **展示元件**: Card, Table, Tag, Badge, Statistic (商品展示、訂單管理)
+    - **反饋元件**: Message, Modal, Popconfirm, Spin (操作回饋、確認對話框)
+    - **導航元件**: Menu, Button, Breadcrumb (主導航、頁面導航)
+    - **佈局元件**: Layout, Row, Col, Space, Divider (頁面結構、響應式佈局)
+  - **主題配置**: `styles.js` 中自訂主色調為深棕色 `#2B2118`
+
+- **`@ant-design/icons@5.6.1`**
+  - **功能**: Ant Design 官方圖標庫
+  - **應用**: 遍布整個應用的所有圖標需求
+    - 導航圖標: `HomeOutlined`, `ShoppingOutlined`, `UserOutlined`
+    - 操作圖標: `PlusOutlined`, `MinusOutlined`, `DeleteOutlined`
+    - 狀態圖標: `CheckCircleOutlined`, `ExclamationCircleOutlined`
+
+#### 樣式系統套件
+- **`@emotion/react@11.14.0`** & **`@emotion/styled@11.14.0`**
+  - **功能**: CSS-in-JS 樣式解決方案
+  - **應用**:
+    - `styles/` 目錄下所有樣式檔案
+    - 動態樣式計算和主題切換
+    - 響應式設計實現
+  - **優勢**: 零執行時樣式注入，優秀的開發者體驗
+
+- **`normalize.css@8.0.1`**
+  - **功能**: 瀏覽器樣式標準化
+  - **應用**: `index.css` 中導入，確保跨瀏覽器一致性
+
+### HTTP 請求與資料處理 (HTTP & Data Processing)
+
+#### 網路請求套件
+- **`axios@1.7.9`** (透過全域配置使用)
+  - **功能**: Promise 基礎的 HTTP 客戶端
+  - **應用**:
+    - `utils/Request.js`: 全域 axios 實例配置
+    - 請求/響應攔截器處理認證 Token
+    - 所有 API 調用的基礎設施
+  - **特色**: 自動 Token 附加、響應 Token 更新、錯誤統一處理
+
+- **`qs@6.13.1`** (透過全域引用使用)
+  - **功能**: 查詢字串序列化/反序列化
+  - **應用**:
+    - `cartService.js`: 將物件轉換為 `application/x-www-form-urlencoded` 格式
+    - 所有 POST 請求的參數處理
+    - 陣列參數使用 `arrayFormat: 'brackets'` 格式
+
+### 日期處理套件 (Date Processing)
+
+- **`dayjs@1.11.13`**
+  - **功能**: 輕量級日期處理庫
+  - **應用**:
+    - `RegisterModal.js`: 生日欄位的日期格式化
+    - `PurchaseHistoryPage.js`: 訂單時間顯示格式化
+    - API 日期參數標準化為 `YYYY-MM-DD` 格式
+  - **優勢**: 相較於 moment.js 更小的 bundle 大小，API 相容性佳
+
+### 開發工具套件 (Development Tools)
+
+#### 測試相關
+- **`@testing-library/react@14.3.1`**
+  - **功能**: React 元件測試工具
+  - **應用**: `App.test.js` 等測試檔案
+  - **特色**: 以使用者行為為中心的測試方法
+
+- **`@testing-library/jest-dom@6.6.3`**
+  - **功能**: Jest DOM 擴展匹配器
+  - **應用**: 增強 Jest 對 DOM 元素的斷言能力
+
+- **`@testing-library/user-event@14.5.2`**
+  - **功能**: 使用者事件模擬
+  - **應用**: 模擬真實的使用者互動行為進行測試
+
+#### 效能監控
+- **`web-vitals@4.2.4`**
+  - **功能**: Web 核心效能指標測量
+  - **應用**: `reportWebVitals.js` 中收集 LCP、FID、CLS 等指標
+  - **用途**: 監控應用效能，優化使用者體驗
+
+### 套件使用模式與最佳實踐 (Package Usage Patterns)
+
+#### 全域配置模式
+```javascript
+// Request.js - axios 全域配置
+const instance = axios.create({
+  baseURL: API_CONFIG.baseURL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+});
+
+// 攔截器自動處理認證
+instance.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Auth = token;
+  }
+  return config;
+});
+```
+
+#### 元件層級整合
+```javascript
+// 典型的頁面元件套件使用模式
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Card, Button, Space, message } from 'antd';
+import { ShoppingCartOutlined } from '@ant-design/icons';
+import styled from '@emotion/styled';
+import dayjs from 'dayjs';
+```
+
+#### 服務層封裝
+```javascript
+// cartService.js - 套件封裝模式
+class CartService {
+  async addToCart(accountId, productId, quantity) {
+    return await Request().post(
+      getApiUrl('addToCart'),
+      Qs.stringify({ account_id: accountId, product_id: productId, quantity })
+    );
+  }
+}
+```
+
+### 套件版本管理策略 (Package Version Management)
+
+#### 穩定版本選擇
+- **主要套件**: 選擇穩定的 LTS 版本，如 React 19.1.0
+- **UI 套件**: Ant Design 5.x 系列，功能完善且社群活躍
+- **工具套件**: 選擇維護良好、文檔完整的套件
+
+#### 相容性考量
+- **React 19**: 向下相容性佳，支援現有的 Hook 和 Component 模式
+- **Ant Design 5**: 與 React 18+ 完全相容
+- **Emotion**: 效能優異，支援 SSR 和 CSR
+
+#### 未來升級規劃
+- **React**: 跟隨官方 LTS 版本升級
+- **Ant Design**: 關注新版本的設計系統改進
+- **Redux Toolkit**: 考慮整合 RTK Query 進行 API 狀態管理
+
+### 套件選擇的技術決策 (Technical Decision Rationale)
+
+#### 為什麼選擇這些套件？
+
+1. **React 19**: 
+   - 最新的 Concurrent Features
+   - 更好的 Suspense 支援
+   - 改進的 Hook 效能
+
+2. **Ant Design**: 
+   - 豐富的企業級元件
+   - 優秀的設計語言
+   - 完整的 TypeScript 支援
+
+3. **Redux Toolkit**: 
+   - 現代化的 Redux 開發體驗
+   - 內建 Immer 和 DevTools
+   - 減少樣板程式碼
+
+4. **Emotion**: 
+   - 優秀的 CSS-in-JS 效能
+   - 強大的主題系統
+   - 零執行時樣式注入
+
+5. **dayjs**: 
+   - 輕量級 (相較於 moment.js)
+   - API 簡潔直觀
+   - 良好的樹搖優化
+
+這些套件的組合形成了一個現代化、高效能、易維護的前端技術棧，為專案提供了堅實的技術基礎。
+
 ## 核心技術棧
 
 ### 主要框架與庫

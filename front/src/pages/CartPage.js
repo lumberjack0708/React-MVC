@@ -1,5 +1,5 @@
 /* global Qs */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchCartStatistics } from '../store/cartSlice';
 import { useNotification } from '../components/Notification';
@@ -80,7 +80,7 @@ function CartPage({ user }) {
   /**
    * 載入購物車資料
    */
-  const loadCartData = async () => {
+  const loadCartData = useCallback(async () => {
     if (!user || !user.account_id) return;
     
     setLoading(true);
@@ -123,7 +123,7 @@ function CartPage({ user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, notify]);
 
   /**
    * 更新商品數量 - 使用樂觀更新
@@ -297,6 +297,11 @@ function CartPage({ user }) {
         
         // 刷新 Redux 購物車統計
         dispatch(fetchCartStatistics(user.account_id));
+        
+        // 延遲導航到購買紀錄頁面，讓用戶有時間看到成功消息
+        setTimeout(() => {
+          navigate('/purchase-history');
+        }, 2000);
       } else {
         notify.error('訂單失敗', response.data.message || '建立訂單失敗，請稍後再試。');
       }
@@ -313,7 +318,7 @@ function CartPage({ user }) {
     if (user && user.account_id) {
       loadCartData();
     }
-  }, [user]);
+  }, [user, loadCartData]);
 
   // 如果未登入，顯示登入提示
   if (!token || !user) {

@@ -153,6 +153,7 @@ front/
 │   ├── components/         # 共用元件
 │   │   ├── CartBadge.js      # 【新】購物車數量徽章
 │   │   ├── LoginModal.js     # 登入彈窗
+│   │   ├── RegisterModal.js  # 【新】註冊彈窗
 │   │   ├── Notification.js   # 全域通知系統 (Provider & Hook)
 │   │   └── ProductDetailModal.js # 商品詳情彈窗
 │   │
@@ -188,15 +189,38 @@ front/
 
 ## 核心功能資料流 (Core Functionality Data Flow)
 
-### 1. 加入商品到購物車 (On `ProductsPage` / `HomePage`)
-1.  **使用者操作**: 點擊「加入購物車」按鈕。
-2.  **事件處理**: 觸發 `handleAddToCart(product)` 函數。
-3.  **API 調用**: 函數內部不再 `dispatch` Redux action，而是直接調用 `await cartService.addToCart(userId, productId, 1)`。
-4.  **服務層**: `cartService` 透過 `axios` 向後端發送 `POST` 請求。
-5.  **UI 反饋**: 請求成功後，使用 `useNotification` 顯示成功訊息。
-6.  **狀態同步問題**: 此時，頁首的 `CartBadge` **不會**自動更新，因為它依賴的 Redux store 沒有變化。這是需要修復的技術債。
+### 1. 用戶註冊流程 (User Registration Flow)
+1. **使用者操作**: 在登入模態框中點擊「立即註冊」按鈕
+2. **元件切換**: `LoginModal` 開啟 `RegisterModal` 子元件
+3. **表單驗證**: 
+   - 前端驗證：帳號格式(3-10字元英數)、Email格式、密碼確認、必填欄位
+   - 即時反饋：表單項目失焦時進行驗證
+4. **API 調用**: 
+   - 呼叫 `newUser` API，傳送註冊資料
+   - 包含必填項目(帳號、Email、密碼、姓名)和選填項目(地址、生日)
+5. **後端處理**:
+   - 參數驗證與格式檢查
+   - 帳號和Email唯一性檢查
+   - 建立用戶帳戶、角色關聯、購物車初始化
+   - 完整性驗證與錯誤回滾機制
+6. **成功處理**:
+   - 顯示個人化成功通知(包含用戶姓名和帳號)
+   - 自動填入登入表單的帳號欄位
+   - 關閉註冊模態框，回到登入介面
+7. **錯誤處理**:
+   - 顯示詳細錯誤訊息(帳號重複、Email已註冊等)
+   - 保持註冊表單開啟，讓用戶修正資料
 
-### 2. 管理購物車 (On `CartPage`) - **樂觀更新**
+### 2. 加入商品到購物車 (On `ProductsPage` / `HomePage`)
+1.  **使用者操作**: 點擊「加入購物車」按鈕。
+2.  **登入檢查**: 首先檢查用戶是否已登入，未登入則顯示登入提示
+3.  **事件處理**: 觸發 `handleAddToCart(product)` 函數。
+4.  **API 調用**: 函數內部不再 `dispatch` Redux action，而是直接調用 `await cartService.addToCart(userId, productId, 1)`。
+5.  **服務層**: `cartService` 透過 `axios` 向後端發送 `POST` 請求。
+6.  **UI 反饋**: 請求成功後，使用 `useNotification` 顯示成功訊息。
+7.  **狀態同步問題**: 此時，頁首的 `CartBadge` **不會**自動更新，因為它依賴的 Redux store 沒有變化。這是需要修復的技術債。
+
+### 3. 管理購物車 (On `CartPage`) - **樂觀更新**
 1.  **初始載入**: `useEffect` 觸發 `loadCartData`，調用 `cartService.getCart` 獲取資料，並用 `setCartItems` 和 `setCartStats` 存入本地 state。
 2.  **使用者操作**: 點擊商品數量的「+」按鈕。
 3.  **事件處理**: 觸發 `handleQuantityChange(itemId, newQuantity)`。
@@ -215,6 +239,199 @@ front/
 1.  **簡化複雜度**: 對於中小型應用，Redux 的樣板程式碼（Actions, Reducers, Dispatch）可能過於繁瑣。直接使用 `useState` 和服務層更為直觀。
 2.  **提升使用者體驗**: Redux 的標準流程是 `Dispatch -> Reducer -> Update UI`，中間涉及網路請求時會有效能延遲。樂觀更新模式將 UI 更新提前，提供了即時的交互反饋。
 3.  **API 成為單一事實來源 (Single Source of Truth)**: 在電商這類強依賴後端資料的場景中，後端資料庫才是真正的"事實來源"。前端狀態應視為後端資料的快照或緩存，而非獨立的狀態機。此架構正反映了這一點。
+
+## 註冊功能深度解析 (Registration Feature Deep Dive)
+
+### 註冊系統架構設計
+
+#### 多層次使用者體驗設計
+1. **無縫整合**: 註冊功能完全整合在登入流程中，用戶無需離開當前頁面
+2. **漸進式表單**: 從必填欄位到選填欄位的邏輯排列
+3. **即時驗證**: 表單欄位失焦時進行即時驗證，提供即時反饋
+4. **智能跳轉**: 註冊成功後自動填入登入表單，減少用戶操作步驟
+
+#### 表單設計模式
+```javascript
+// 註冊表單結構
+const formFields = {
+  required: {
+    account_code: "帳號 (3-10字元英數)",
+    email: "電子郵件",
+    name: "姓名",
+    password: "密碼 (至少6字元)",
+    confirmPassword: "確認密碼"
+  },
+  optional: {
+    addr: "地址",
+    birth: "生日 (DatePicker)"
+  }
+};
+```
+
+### 前端驗證機制
+
+#### 即時驗證規則
+```javascript
+// 帳號驗證
+{
+  required: true,
+  min: 3, max: 10,
+  pattern: /^[a-zA-Z0-9]+$/,
+  message: "帳號只能包含英文字母和數字"
+}
+
+// 密碼確認驗證
+const validateConfirmPassword = (_, value) => {
+  if (!value || form.getFieldValue('password') === value) {
+    return Promise.resolve();
+  }
+  return Promise.reject(new Error('兩次輸入的密碼不一致！'));
+};
+```
+
+#### 日期處理整合
+```javascript
+// dayjs 整合處理生日欄位
+const postData = {
+  // ... 其他欄位
+  bir: values.birth ? dayjs(values.birth).format('YYYY-MM-DD') : ''
+};
+```
+
+### 後端整合策略
+
+#### API 調用封裝
+```javascript
+// 註冊 API 調用
+const res = await Request().post(
+  getApiUrl('newUser'), 
+  Qs.stringify(postData)
+);
+```
+
+#### 錯誤處理分層
+1. **網路層錯誤**: 連線超時、伺服器無回應
+2. **業務邏輯錯誤**: 帳號重複、Email已註冊
+3. **參數驗證錯誤**: 格式不正確、必填欄位遺漏
+
+### 通知系統整合
+
+#### 雙重通知機制
+```javascript
+// 全域通知系統 - 詳細訊息
+notify.success(
+  '🎉 註冊成功！',
+  `歡迎加入 ${response.full_name}！您的帳號是 ${response.account_code}`
+);
+
+// Ant Design Message - 簡短確認
+message.success('註冊成功！');
+```
+
+#### 個人化訊息設計
+- **成功訊息**: 包含用戶姓名和帳號，增加親切感
+- **錯誤訊息**: 提供具體的修正建議
+- **警告訊息**: 網路問題時提供故障排除指引
+
+### 用戶體驗優化
+
+#### 智能表單管理
+1. **自動焦點**: 表單開啟時自動聚焦第一個欄位
+2. **Tab 順序**: 邏輯化的 Tab 切換順序
+3. **Enter 提交**: 支援 Enter 鍵快速提交
+4. **表單記憶**: 錯誤時保留已填入的正確資料
+
+#### 視覺設計整合
+```javascript
+// 統一的視覺設計語言
+const modalConfig = {
+  title: (
+    <div style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+      <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+      會員註冊
+    </div>
+  ),
+  width: 480,
+  centered: true,
+  destroyOnClose: true
+};
+```
+
+### 狀態管理整合
+
+#### 父子元件通信
+```javascript
+// LoginModal 中的註冊按鈕
+<Button 
+  type="link" 
+  onClick={() => setRegisterModalVisible(true)}
+>
+  立即註冊
+</Button>
+
+// 註冊成功後的回調處理
+const handleRegisterSuccess = (response) => {
+  // 填入登入表單的帳號欄位
+  loginForm.setFieldsValue({
+    account_code: response.account_code
+  });
+  
+  // 聚焦密碼欄位，引導用戶完成登入
+  setTimeout(() => {
+    const passwordInput = document.querySelector('input[type="password"]');
+    passwordInput?.focus();
+  }, 100);
+};
+```
+
+#### 表單狀態同步
+- **重置機制**: 取消或成功時自動重置表單
+- **載入狀態**: 提交期間顯示載入動畫
+- **防重複提交**: 提交期間禁用提交按鈕
+
+### 安全性考量
+
+#### 前端安全驗證
+1. **輸入清理**: 防止 XSS 攻擊
+2. **格式驗證**: 確保資料格式正確
+3. **長度限制**: 防止過長輸入造成問題
+
+#### 密碼安全
+- **明文顯示控制**: 密碼欄位支援顯示/隱藏切換
+- **確認機制**: 雙重密碼輸入確認
+- **強度指引**: 提供密碼強度建議
+
+### 未來擴展性
+
+#### 可擴展的表單架構
+- **動態欄位**: 支援根據業務需求動態添加欄位
+- **條件驗證**: 支援根據其他欄位值進行條件驗證
+- **多步驟表單**: 架構支援分步驟的複雜註冊流程
+
+#### 國際化準備
+- **多語言支援**: 錯誤訊息和標籤支援多語言
+- **地區客製化**: 支援不同地區的註冊需求
+
+### 效能最佳化
+
+#### 減少不必要的渲染
+```javascript
+// 使用 React.memo 優化元件
+const RegisterModal = React.memo(({ visible, onCancel, onSuccess }) => {
+  // ... 元件實作
+});
+
+// useCallback 優化事件處理函數
+const handleRegister = useCallback(async (values) => {
+  // ... 處理邏輯
+}, [notify]);
+```
+
+#### 懶載入策略
+- **條件載入**: 只有在需要時才載入註冊元件
+- **代碼分割**: 可考慮將註冊功能分離成獨立的 chunk
+
+這個註冊功能實現展現了現代前端應用的完整用戶註冊體驗，從表單設計到錯誤處理，從狀態管理到安全性考量，每個細節都經過精心設計，為用戶提供了流暢、安全、直觀的註冊體驗。
 
 這個前端專案展現了從傳統全域狀態管理向現代 API 驅動架構的演進，在提升使用者體驗和簡化開發複雜度之間取得了良好的平衡。
 
@@ -238,7 +455,17 @@ front/
 │   │   ├── LoginModal.js     # 登入彈窗元件 (130行)
 │   │   │                     # - 表單驗證與提交
 │   │   │                     # - JWT Token 處理
+│   │   │                     # - 整合註冊功能入口
 │   │   │                     # - 使用：App.js
+│   │   │
+│   │   ├── RegisterModal.js  # 【新增】註冊彈窗元件 (239行)
+│   │   │                     # - 完整的註冊表單(7個欄位)
+│   │   │                     # - 前端表單驗證與後端API整合
+│   │   │                     # - 密碼確認驗證
+│   │   │                     # - 日期選擇器整合(dayjs)
+│   │   │                     # - 個人化成功/錯誤通知
+│   │   │                     # - 自動填入登入表單
+│   │   │                     # - 使用：LoginModal.js
 │   │   │
 │   │   ├── Notification.js   # 【核心】全域通知系統 (253行)
 │   │   │                     # - NotificationProvider (Context)

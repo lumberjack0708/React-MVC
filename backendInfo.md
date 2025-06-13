@@ -34,6 +34,8 @@
 - **商品管理 API** - CRUD 操作與圖片上傳
 - **訂單管理系統** - 完整的訂單生命週期管理
 - **使用者管理** - 帳戶資料與角色管理
+- **購物車系統** - 完整的購物車管理功能
+- **註冊系統** - 用戶自主註冊與資料驗證
 - **統計資料 API** - 訂單統計與分析功能
 
 ## Architecture
@@ -450,8 +452,12 @@ CREATE TABLE `order_detail` (
 
 ## API Routes Reference
 
+### 使用者認證 API
+- **doLogin** - 使用者登入（無需認證）
+- **newUser** - 使用者註冊（無需認證）
+
 ### 商品管理 API
-- **getProducts** - 取得商品列表
+- **getProducts** - 取得商品列表（無需認證）
 - **newProduct** - 新增商品（需權限）
 - **updateProduct** - 更新商品（需權限）
 - **removeProduct** - 刪除商品（需權限）
@@ -463,249 +469,649 @@ CREATE TABLE `order_detail` (
 - **newOrder** - 建立新訂單
 - **updateOrderStatus** - 更新訂單狀態（需權限）
 - **getOrderDetail** - 取得訂單詳細資料
+- **removeOrder** - 取消訂單
 
 ### 使用者管理 API
-- **doLogin** - 使用者登入（無需認證）
 - **getUsers** - 取得使用者列表（需權限）
 - **getUser** - 取得特定使用者資料
 - **updateUser** - 更新使用者資料
 
-## MVC Architecture Pattern
+### 購物車管理 API
+- **getCart** - 取得購物車內容
+- **addToCart** - 加入商品到購物車
+- **updateCartItem** - 更新購物車商品數量
+- **removeFromCart** - 移除購物車商品
+- **clearCart** - 清空購物車
+- **getCartStatistics** - 取得購物車統計資訊
 
-### Controllers (控制器層)
-- **職責**：處理 HTTP 請求，協調 Model 與 View
-- **範例**：`Controllers\Product`
+## 完整 API 業務邏輯與處理流程
+
+### 使用者認證 API
+
+#### `doLogin` - 使用者登入
+**控制器**: `Controllers\Account::doLogin()`  
+**模型**: `Models\Account::doLogin()`  
+**權限**: 無需認證
+
+**業務流程**:
+1. **參數驗證**: 檢查 `account_code` 和 `password` 是否提供
+2. **帳戶查詢**: 在 `account` 表中查詢匹配的帳戶
+3. **密碼驗證**: 比對輸入密碼與資料庫密碼（目前為明文比對）
+4. **JWT 生成**: 為通過驗證的用戶生成 JWT Token
+5. **回應數據**: 返回用戶資訊和 Token
+
+**回應格式**:
 ```php
-class Product extends Controller {
-    private $pm;
-    
-    public function __construct() {
-        $this->pm = new ProductModel();
-    }
-    
-    public function getProducts(){
-        if (isset($_POST['pid'])) {
-            return $this->pm->getProduct($_POST['pid']);
-        } else {
-            return $this->pm->getProducts();
-        }
-    }
-    
-    public function newProduct(){
-        $p_name = $_POST['p_name'];
-        $price = $_POST['price'];
-        $stock = $_POST['stock'];
-        $category = $_POST['category'];
-        
-        // 處理圖片上傳
-        $imageUrl = $this->handleImageUpload();
-        
-        return $this->pm->newProduct($p_name, $price, $stock, $category, $imageUrl);
-    }
-}
-```
-
-### Models (模型層)
-- **職責**：資料存取、業務邏輯驗證、資料處理
-- **範例**：`Models\Product`
-```php
-class Product {
-    public function getProducts(){
-        $sql = "SELECT * FROM `product`";
-        return DB::select($sql, NULL);
-    }
-    
-    public function newProduct($p_name, $price, $stock, $category, $imageUrl){
-        // 業務邏輯驗證
-        if(empty($p_name)) {
-            return array('status' => 400, 'message' => "產品名稱不可為空");
-        }
-        
-        if(!is_numeric($price) || $price <= 0) {
-            return array('status' => 400, 'message' => "產品價格必須大於零");
-        }
-        
-        // 檢查重複名稱
-        $checkSql = "SELECT COUNT(*) AS count FROM `product` WHERE `name` = ?";
-        $checkResult = DB::select($checkSql, array($p_name));
-        
-        if ($checkResult['result'][0]['count'] > 0) {
-            return array('status' => 409, 'message' => "產品名稱已存在");
-        }
-        
-        // 執行新增
-        $sql = "INSERT INTO `product` (`name`, `price`, `stock`, `category`, `image_url`) 
-                VALUES (?, ?, ?, ?, ?)";
-        return DB::insert($sql, array($p_name, $price, $stock, $category, $imageUrl));
-    }
-}
-```
-
-## File Upload System
-
-### 商品圖片上傳
-```php
-public function newProduct(){
-    // ... 其他參數處理 ...
-    
-    $imageUrl = null;
-    
-    // 處理圖片上傳
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../public/uploads/products/';
-        $fileName = uniqid() . '-' . basename($_FILES['image']['name']);
-        $uploadFile = $uploadDir . $fileName;
-        
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
-            $imageUrl = 'uploads/products/' . $fileName;
-        }
-    }
-    
-    return $this->pm->newProduct($p_name, $price, $stock, $category, $imageUrl);
-}
-```
-
-### 上傳目錄結構
-```
-public/uploads/
-└── products/           # 商品圖片
-    ├── 674a8b2c1d4e5-product1.jpg
-    ├── 674a8b2c1d4e6-product2.png
-    └── ...
-```
-
-## Error Handling & Response Format
-
-### 標準回應格式
-```php
-// 成功回應
+// 成功
 array(
     'status' => 200,
-    'message' => '操作成功',
-    'result' => $data,
-    'token' => $newToken      // 認證後更新 token
+    'message' => '登入成功',
+    'token' => $jwt_token,
+    'user' => $user_data
 )
 
-// 錯誤回應
+// 失敗
 array(
-    'status' => 400,          // 4xx 客戶端錯誤, 5xx 伺服器錯誤
-    'message' => '錯誤訊息'
+    'status' => 401,
+    'message' => '帳號或密碼錯誤'
 )
 ```
 
-### 常見狀態碼
-- **200** - 操作成功
-- **204** - 無內容（操作失敗但無錯誤）
-- **400** - 請求錯誤（參數錯誤、SQL 錯誤）
-- **401** - 未認證（Token 無效或遺失）
-- **403** - 權限不足
-- **404** - 找不到對應的操作
-- **409** - 衝突（如重複資料）
-- **500** - 伺服器內部錯誤
+#### `newUser` - 使用者註冊
+**控制器**: `Controllers\Account::newUser()`  
+**模型**: `Models\Account::newAccount()`  
+**權限**: 無需認證（公開 API）
 
-## Security Features
+**業務流程**:
+1. **參數驗證**:
+   - 必填欄位檢查: `account_code`, `email`, `password`, `name`
+   - 帳號格式驗證: 3-10字元，僅英文數字
+   - Email 格式驗證: `filter_var()` 檢查
+   - 密碼強度檢查: 至少6個字元
 
-### 1. SQL Injection 防護
-- 使用 PDO Prepared Statements
-- 所有動態參數皆透過參數化查詢
+2. **唯一性檢查**:
+   - 檢查帳號是否已存在
+   - 檢查 Email 是否已被註冊
 
-### 2. JWT Token 安全
-- Token 過期機制（1小時）
-- 每次請求更新 Token
-- Secret Key 簽名驗證
+3. **帳戶建立**:
+   - 在 `account` 表新增用戶記錄
+   - 預設角色為客戶 (`role_id = 2`)
 
-### 3. CORS 設定
+4. **角色關聯**:
+   - 在 `user_role` 表建立用戶-角色關聯
+
+5. **購物車初始化**:
+   - 在 `shopping_cart` 表為新用戶建立購物車
+
+6. **完整性驗證**:
+   - 檢查所有關聯資料是否正確建立
+
+7. **錯誤回滾**:
+   - 如有任何步驟失敗，清理已建立的資料
+
+**特殊處理**:
+- **事務控制**: 雖未使用資料庫事務，但實現了手動回滾機制
+- **清理機制**: 失敗時會逐步清理 `shopping_cart`, `user_role`, `account` 記錄
+- **資料一致性**: 通過驗證確保所有必要記錄都已正確建立
+
+**回應格式**:
 ```php
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Auth");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Credentials: true");
+// 成功
+array(
+    'status' => 200,
+    'message' => '註冊成功',
+    'account_code' => $account_code,
+    'full_name' => $full_name
+)
+
+// 失敗範例
+array(
+    'status' => 409,
+    'message' => '此帳號已被註冊'
+)
 ```
 
-### 4. 檔案上傳安全
-- 限制上傳目錄
-- 檔名重新命名（使用 uniqid）
-- 檔案類型驗證
+### 商品管理 API
 
-## Performance Considerations
+#### `getProducts` - 取得商品列表
+**控制器**: `Controllers\Product::getProducts()`  
+**模型**: `Models\Product::getProducts()` / `getProduct()`  
+**權限**: 無需認證（公開 API）
 
-### 1. 資料庫最佳化
-- 使用索引加速查詢
-- 避免 N+1 查詢問題
-- 適當的資料表正規化
+**業務流程**:
+1. **參數檢查**: 若有 `pid` 參數則查詢單一商品，否則查詢全部
+2. **資料查詢**: 從 `product` 表查詢商品資訊
+3. **圖片URL處理**: 自動組合完整的圖片URL路徑
 
-### 2. 連線管理
-- 單例模式的資料庫連線
-- 連線重用機制
+#### `newProduct` - 新增商品
+**控制器**: `Controllers\Product::newProduct()`  
+**模型**: `Models\Product::newProduct()`  
+**權限**: 需要管理員權限
 
-### 3. 快取策略
-- 可考慮加入 Redis 快取常用資料
-- Session 資料快取
+**業務流程**:
+1. **參數驗證**:
+   - 商品名稱不可為空
+   - 價格必須為正數
+   - 庫存不可為負數
 
-## Development & Deployment
+2. **唯一性檢查**: 確保商品名稱不重複
 
-### 環境設定
-```ini
-# vendor/.env
-dbHost=localhost
-dbName=petdeptstore
-dbUser=root
-dbPassword=
+3. **圖片上傳處理**:
+   - 檢查上傳檔案是否有效
+   - 使用 `uniqid()` 生成唯一檔名
+   - 移動檔案到 `public/uploads/products/` 目錄
+
+4. **資料庫操作**: 在 `product` 表新增商品記錄
+
+#### `updateProduct` - 更新商品
+**控制器**: `Controllers\Product::updateProduct()`  
+**模型**: `Models\Product::updateProduct()`  
+**權限**: 需要管理員權限
+
+**業務流程**:
+1. **參數驗證**: 與新增商品相同的驗證規則
+2. **商品存在性檢查**: 確認商品ID存在
+3. **圖片處理**: 如有新圖片則處理上傳，否則保留原圖
+4. **更新操作**: 更新 `product` 表記錄
+
+#### `removeProduct` - 刪除商品
+**控制器**: `Controllers\Product::removeProduct()`  
+**模型**: `Models\Product::removeProduct()`  
+**權限**: 需要管理員權限
+
+**業務流程**:
+1. **參數檢查**: 驗證產品ID
+2. **相依性檢查**: 檢查是否有訂單使用此商品（目前未實作）
+3. **刪除操作**: 從 `product` 表刪除記錄
+
+### 訂單管理 API
+
+#### `getOrders` - 取得訂單列表
+**控制器**: `Controllers\Order::getOrders()`  
+**模型**: `Models\Order::getOrders()` / `getOrder()`  
+**權限**: 管理員可查看全部，客戶僅能查看自己的
+
+**業務流程**:
+1. **權限判斷**: 根據是否有 `account_id` 參數決定查詢範圍
+2. **管理員檢視**: 顯示所有訂單的總覽，包含客戶資訊和訂單金額
+3. **客戶檢視**: 僅顯示該客戶的訂單，隱藏其他客戶資訊
+4. **聚合計算**: 自動計算訂單總金額和商品種類數量
+
+#### `newOrder` - 建立新訂單
+**控制器**: `Controllers\Order::newOrder()`  
+**模型**: `Models\Order::newOrder()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **參數驗證**:
+   - 帳戶ID有效性
+   - 商品ID陣列格式
+   - 數量陣列格式
+
+2. **庫存檢查**:
+   - 逐一檢查每項商品的庫存
+   - 確保庫存足夠滿足訂單需求
+
+3. **訂單建立**:
+   - 在 `orders` 表新增訂單主記錄
+   - 狀態設為 'pending'
+
+4. **訂單明細**:
+   - 在 `order_detail` 表新增每項商品記錄
+   - 記錄商品ID和數量
+
+5. **庫存更新**:
+   - 從 `product` 表扣除對應庫存
+   - 使用原子操作確保資料一致性
+
+6. **購物車清理**:
+   - 訂單成功後清空對應的購物車
+
+**錯誤處理**:
+- 庫存不足時提供詳細的錯誤訊息
+- 任何步驟失敗都會回滾已執行的操作
+
+#### `updateOrderStatus` - 更新訂單狀態
+**控制器**: `Controllers\Order::updateOrderStatus()`  
+**模型**: `Models\Order::updateOrderStatus()`  
+**權限**: 需要管理員權限
+
+**業務流程**:
+1. **參數驗證**: 檢查訂單ID和狀態值
+2. **狀態驗證**: 確保狀態值在允許範圍內
+3. **訂單存在性**: 確認訂單存在
+4. **狀態更新**: 更新 `orders` 表的狀態欄位
+
+**支援狀態**:
+- `pending` - 待處理
+- `processing` - 處理中
+- `shipped` - 已出貨
+- `cancelled` - 已取消
+
+#### `removeOrder` - 取消訂單
+**控制器**: `Controllers\Order::removeOrder()`  
+**模型**: `Models\Order::removeOrder()`  
+**權限**: 客戶僅能取消自己的訂單
+
+**業務流程**:
+1. **權限驗證**: 確認客戶只能取消自己的訂單
+2. **狀態檢查**: 僅允許取消 'pending' 狀態的訂單
+3. **庫存回滾**: 將訂單商品的數量歸還到庫存
+4. **狀態更新**: 將訂單狀態改為 'cancelled'
+
+**特殊邏輯**:
+- 管理員可以取消任何訂單
+- 客戶僅能取消自己的訂單
+- 已出貨的訂單無法取消
+
+### 購物車管理 API
+
+#### `getCart` - 取得購物車內容
+**控制器**: `Controllers\Cart::getCart()`  
+**模型**: `Models\Cart::getUserCart()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **購物車檢查**: 確認用戶是否有活躍的購物車
+2. **自動建立**: 如無購物車則自動建立
+3. **商品查詢**: 查詢購物車中的所有商品
+4. **價格計算**: 計算各項目小計和總計
+5. **庫存檢查**: 檢查商品庫存狀態
+6. **價格驗證**: 比對購物車價格與當前商品價格
+
+**回應包含**:
+- 購物車商品列表
+- 各商品的數量和小計
+- 購物車總計資訊
+- 庫存狀態警告
+
+#### `addToCart` - 加入商品到購物車
+**控制器**: `Controllers\Cart::addToCart()`  
+**模型**: `Models\Cart::addToCart()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **參數驗證**: 檢查帳戶ID、商品ID、數量
+2. **商品驗證**: 確認商品存在且庫存充足
+3. **購物車準備**: 獲取或建立用戶的活躍購物車
+4. **重複檢查**: 檢查商品是否已在購物車中
+5. **數量處理**:
+   - 如商品已存在，累加數量
+   - 如為新商品，新增記錄
+6. **庫存限制**: 確保總數量不超過庫存
+7. **價格記錄**: 記錄加入時的商品價格
+
+#### `updateCartItem` - 更新購物車商品數量
+**控制器**: `Controllers\Cart::updateCartItem()`  
+**模型**: `Models\Cart::updateCartItem()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **參數驗證**: 檢查購物車項目ID和新數量
+2. **所有權驗證**: 確認該購物車項目屬於當前用戶
+3. **庫存檢查**: 確認新數量不超過商品庫存
+4. **特殊處理**: 數量為0時自動刪除該項目
+5. **更新操作**: 更新 `cart_items` 表記錄
+6. **統計更新**: 觸發購物車更新時間戳
+
+#### `removeFromCart` - 移除購物車商品
+**控制器**: `Controllers\Cart::removeFromCart()`  
+**模型**: `Models\Cart::removeFromCart()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **參數驗證**: 檢查購物車項目ID
+2. **所有權驗證**: 確認該項目屬於當前用戶
+3. **刪除操作**: 從 `cart_items` 表刪除記錄
+4. **觸發器**: 資料庫觸發器自動更新購物車時間戳
+
+#### `clearCart` - 清空購物車
+**控制器**: `Controllers\Cart::clearCart()`  
+**模型**: `Models\Cart::clearCart()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **購物車定位**: 找到用戶的活躍購物車
+2. **批量刪除**: 刪除該購物車的所有商品項目
+3. **狀態更新**: 保持購物車狀態為活躍但內容為空
+
+### 使用者管理 API
+
+#### `getUsers` - 取得使用者列表
+**控制器**: `Controllers\Account::getUsers()`  
+**模型**: `Models\Account::getAccounts()`  
+**權限**: 需要管理員權限
+
+**業務流程**:
+1. **參數檢查**: 若有 `uid` 參數則查詢單一用戶
+2. **資料查詢**: 從 `account` 表查詢用戶資訊
+3. **敏感資料過濾**: 不返回密碼等敏感資訊
+
+#### `updateUser` - 更新使用者資料
+**控制器**: `Controllers\Account::updateUser()`  
+**模型**: `Models\Account::updateAccount()`  
+**權限**: 需要登入（可更新自己的資料）
+
+**業務流程**:
+1. **參數驗證**: 檢查必要欄位
+2. **權限檢查**: 確認只能更新自己的資料（或管理員）
+3. **密碼處理**: 如提供新密碼則更新，否則保持原密碼
+4. **資料更新**: 更新 `account` 表記錄
+
+### 統計 API
+
+#### `getOrderStatistics` - 取得訂單統計
+**控制器**: `Controllers\Order::getOrderStatistics()`  
+**模型**: `Models\Order::getOrderStatistics()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **總訂單數**: 計算用戶的所有訂單數量
+2. **取消訂單數**: 計算已取消的訂單數量
+3. **實際購買金額**: 計算排除取消訂單的總金額
+4. **商品種類數**: 計算購買過的商品種類總數
+
+**統計指標**:
+- `total_orders`: 總訂單數
+- `cancelled_orders`: 已取消訂單數
+- `total_amount`: 實際購買金額
+- `total_items`: 購買商品種類數
+
+#### `getCartStatistics` - 取得購物車統計
+**控制器**: `Controllers\Cart::getCartStatistics()`  
+**模型**: `Models\Cart::getCartStatistics()`  
+**權限**: 需要登入
+
+**業務流程**:
+1. **購物車定位**: 找到用戶的活躍購物車
+2. **商品統計**: 計算購物車中的商品數量
+3. **金額計算**: 計算購物車總金額
+4. **項目統計**: 計算不同商品的種類數
+
+**統計指標**:
+- `total_items`: 購物車商品種類數
+- `total_quantity`: 購物車商品總數量
+- `total_amount`: 購物車總金額
+
+## 資料庫觸發器與約束
+
+### 購物車相關觸發器
+```sql
+-- 新增/更新/刪除購物車項目時自動更新購物車時間戳
+CREATE TRIGGER tr_cart_items_insert_cart AFTER INSERT ON cart_items
+CREATE TRIGGER tr_cart_items_update_cart AFTER UPDATE ON cart_items  
+CREATE TRIGGER tr_cart_items_delete_cart AFTER DELETE ON cart_items
 ```
 
-### Composer 設定
-```json
-{
-    "autoload": {
-        "psr-4": {
-            "Controllers\\": "app/Controllers/",
-            "Models\\": "app/Models/",
-            "Middlewares\\": "app/Middlewares/",
-            "Vendor\\": "vendor/"
+### 外鍵約束
+- `cart_items.cart_id` → `shopping_cart.cart_id` (CASCADE)
+- `cart_items.product_id` → `product.product_id` (CASCADE)
+- `orders.account_id` → `account.account_id` (CASCADE)
+- `order_detail.order_id` → `orders.order_id` (CASCADE)
+- `user_role.account_id` → `account.account_id` (CASCADE)
+
+## 錯誤處理機制
+
+### 分層錯誤處理
+1. **控制器層**: 參數驗證、格式檢查
+2. **模型層**: 業務邏輯驗證、資料一致性檢查
+3. **資料庫層**: SQL 錯誤、約束違反
+
+### 標準錯誤格式
+```php
+array(
+    'status' => $http_status_code,
+    'message' => $error_message
+)
+```
+
+### 常見錯誤狀態碼
+- **400**: 參數錯誤、格式不正確
+- **401**: 未認證、Token 無效
+- **403**: 權限不足
+- **404**: 資源不存在
+- **409**: 資料衝突（如重複註冊）
+- **500**: 伺服器內部錯誤
+
+## 註冊系統深度解析 (Registration System Deep Dive)
+
+### 註冊流程設計原則
+
+#### 1. 安全優先原則
+- **多層驗證**: 前端驗證 + 後端驗證的雙重保護
+- **資料完整性**: 確保帳戶、角色、購物車資料的一致性
+- **回滾機制**: 任何步驟失敗都會清理已建立的資料
+
+#### 2. 用戶體驗原則
+- **即時反饋**: 提供具體的成功/失敗訊息
+- **零障礙**: 註冊完成即可立即使用所有功能
+- **容錯性**: 網路中斷或部分失敗時的優雅處理
+
+### 註冊API實現細節
+
+#### 控制器層 (`Controllers\Account::newUser()`)
+```php
+public function newUser(){
+    // 1. 必要參數檢查
+    if (!isset($_POST['account_code']) || empty($_POST['account_code'])) {
+        return array('status' => 400, 'message' => '帳號為必填欄位');
+    }
+    
+    // 2. 帳號格式驗證
+    if (strlen($_POST['account_code']) < 3 || strlen($_POST['account_code']) > 10) {
+        return array('status' => 400, 'message' => '帳號長度必須在3-10個字元之間');
+    }
+    
+    if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST['account_code'])) {
+        return array('status' => 400, 'message' => '帳號只能包含英文字母和數字');
+    }
+    
+    // 3. Email 格式驗證
+    if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+        return array('status' => 400, 'message' => 'Email 格式不正確');
+    }
+    
+    // 4. 密碼強度檢查
+    if (strlen($_POST['password']) < 6) {
+        return array('status' => 400, 'message' => '密碼長度至少需要6個字元');
+    }
+    
+    // 5. 呼叫模型層處理業務邏輯
+    return $this->am->newAccount(
+        $_POST['account_code'],
+        $_POST['email'], 
+        $_POST['password'],
+        $_POST['name'],
+        $_POST['addr'] ?? null,
+        $_POST['bir'] ?? null
+    );
+}
+```
+
+#### 模型層複合事務處理
+```php
+public function newAccount($account_code, $email, $password, $fullName, $addr = null, $birth = null, $roleId = 2) {
+    try {
+        // 第一階段：唯一性檢查
+        $accountExists = DB::select("SELECT account_id FROM account WHERE account_code=?", [$account_code]);
+        if (!empty($accountExists['result'])) {
+            return array('status' => 409, 'message' => "此帳號已被註冊");
         }
-    },
-    "require": {
-        "firebase/php-jwt": "^6.3"
+        
+        $emailExists = DB::select("SELECT account_id FROM account WHERE email=?", [$email]);
+        if (!empty($emailExists['result'])) {
+            return array('status' => 409, 'message' => "此電子郵件已被註冊");
+        }
+        
+        // 第二階段：建立帳戶
+        $insertResult = DB::insert(
+            "INSERT INTO account (account_code, email, password, full_name, addr, birth, role_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [$account_code, $email, $password, $fullName, $addr, $birth, $roleId]
+        );
+        
+        if ($insertResult['status'] !== 200) {
+            return array('status' => 500, 'message' => "用戶註冊失敗");
+        }
+        
+        // 第三階段：獲取新帳戶ID
+        $newAccountId = $this->getNewAccountId($email);
+        
+        // 第四階段：建立角色關聯
+        $roleResult = DB::insert(
+            "INSERT INTO user_role (account_id, role_id) VALUES (?, ?)",
+            [$newAccountId, $roleId]
+        );
+        
+        // 第五階段：建立購物車
+        $cartResult = DB::insert(
+            "INSERT INTO shopping_cart (account_id, status) VALUES (?, 'active')",
+            [$newAccountId]
+        );
+        
+        // 第六階段：完整性驗證
+        $validation = $this->validateRegistrationIntegrity($newAccountId, $roleId);
+        
+        if (!$validation['valid']) {
+            // 觸發清理程序
+            $this->cleanupFailedRegistration($newAccountId, $roleId);
+            return array('status' => 500, 'message' => '註冊驗證失敗: ' . $validation['reason']);
+        }
+        
+        return array(
+            'status' => 200,
+            'message' => '註冊成功',
+            'account_code' => $account_code,
+            'full_name' => $fullName
+        );
+        
+    } catch (Exception $e) {
+        // 異常處理與清理
+        error_log("註冊過程異常: " . $e->getMessage());
+        if (isset($newAccountId)) {
+            $this->cleanupFailedRegistration($newAccountId, $roleId);
+        }
+        return array('status' => 500, 'message' => '註冊過程發生錯誤，請稍後再試');
     }
 }
 ```
 
-### 部署指令
-```bash
-# 安裝依賴
-composer install
-
-# 匯入資料庫
-mysql -u root -p petdeptstore < sql/petdeptstore\ \(12\).sql
-
-# 設定權限（uploads 目錄）
-chmod 755 public/uploads/
-chmod 755 public/uploads/products/
+#### 資料完整性驗證機制
+```php
+private function validateRegistrationIntegrity($accountId, $roleId) {
+    // 檢查帳戶是否存在
+    $accountCheck = DB::select("SELECT account_id FROM account WHERE account_id = ?", [$accountId]);
+    if (empty($accountCheck['result'])) {
+        return array('valid' => false, 'reason' => '帳戶不存在');
+    }
+    
+    // 檢查角色關聯是否存在
+    $roleCheck = DB::select("SELECT id FROM user_role WHERE account_id = ? AND role_id = ?", [$accountId, $roleId]);
+    if (empty($roleCheck['result'])) {
+        return array('valid' => false, 'reason' => '角色關聯不存在');
+    }
+    
+    // 檢查購物車是否建立
+    $cartCheck = DB::select("SELECT cart_id FROM shopping_cart WHERE account_id = ? AND status = 'active'", [$accountId]);
+    if (empty($cartCheck['result'])) {
+        return array('valid' => false, 'reason' => '購物車建立失敗');
+    }
+    
+    return array('valid' => true, 'reason' => '驗證通過');
+}
 ```
 
-## 架構設計原則
+#### 失敗清理機制
+```php
+private function cleanupFailedRegistration($accountId, $roleId) {
+    try {
+        // 步驟1：清理購物車記錄
+        $cartCleanup = DB::delete("DELETE FROM shopping_cart WHERE account_id = ?", [$accountId]);
+        error_log("購物車清理結果: " . json_encode($cartCleanup));
+        
+        // 步驟2：清理角色關聯
+        $roleCleanup = DB::delete("DELETE FROM user_role WHERE account_id = ? AND role_id = ?", [$accountId, $roleId]);
+        error_log("角色關聯清理結果: " . json_encode($roleCleanup));
+        
+        // 步驟3：清理帳戶記錄
+        $accountCleanup = DB::delete("DELETE FROM account WHERE account_id = ?", [$accountId]);
+        error_log("帳戶清理結果: " . json_encode($accountCleanup));
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("清理失敗註冊資料時發生錯誤: " . $e->getMessage());
+        error_log("需要手動清理的帳戶ID: " . $accountId);
+        return false;
+    }
+}
+```
 
-### 1. 關注點分離
-- **Controller**：處理 HTTP 請求與回應
-- **Model**：封裝業務邏輯與資料存取
-- **Middleware**：處理橫切關注點（認證、權限）
+### 安全性設計考量
 
-### 2. 單一職責原則
-- 每個類別只負責一個特定功能
-- 方法功能單純且可測試
+#### 1. 輸入驗證安全
+- **SQL Injection 防護**: 所有資料庫操作使用 PDO 預處理語句
+- **XSS 防護**: 後端不信任任何前端資料，重新驗證所有輸入
+- **格式驗證**: 嚴格的正則表達式和格式檢查
 
-### 3. 依賴注入
-- Model 透過建構函式注入到 Controller
-- 降低類別間的耦合度
+#### 2. 密碼安全策略
+```php
+// 目前實作 (可改進)
+$hashedPassword = $password; // 明文儲存
 
-### 4. 標準化回應
-- 統一的 API 回應格式
-- 一致的錯誤處理機制
+// 建議改進
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+```
 
-### 5. 安全優先
-- 所有使用者輸入皆進行驗證
-- 實作適當的認證與權限控管
-- 防範常見的安全漏洞
+#### 3. 防重複註冊機制
+- **帳號唯一性**: 使用資料庫唯一約束 + 應用層檢查
+- **Email 唯一性**: 雙重驗證確保不重複
+- **競態條件處理**: 透過資料庫約束處理併發註冊
+
+### 錯誤處理與監控
+
+#### 分層錯誤處理
+1. **驗證層錯誤**: 參數格式、必填欄位
+2. **業務邏輯錯誤**: 重複帳號、Email 衝突
+3. **資料庫層錯誤**: 連線失敗、約束違反
+4. **系統層錯誤**: 記憶體不足、檔案系統錯誤
+
+#### 日誌記錄策略
+```php
+// 成功註冊日誌
+error_log("用戶註冊成功 - 帳號: $account_code, Email: $email, 時間: " . date('Y-m-d H:i:s'));
+
+// 失敗情況日誌
+error_log("註冊失敗 - 原因: {$validation['reason']}, 帳號: $account_code, 時間: " . date('Y-m-d H:i:s'));
+
+// 清理操作日誌
+error_log("執行註冊失敗清理 - 帳戶ID: $accountId, 時間: " . date('Y-m-d H:i:s'));
+```
+
+### 效能最佳化策略
+
+#### 1. 資料庫最佳化
+- **索引優化**: 在 `account_code` 和 `email` 欄位建立索引
+- **查詢最佳化**: 使用 `SELECT COUNT(*)` 而非 `SELECT *` 進行存在性檢查
+- **連線重用**: 使用 DB 類別的連線池機制
+
+#### 2. 併發處理
+- **樂觀鎖定**: 使用資料庫唯一約束處理併發
+- **重試機制**: 失敗時可考慮自動重試
+- **限速保護**: 防止暴力註冊攻擊
+
+### 監控與維護
+
+#### 健康檢查指標
+- **註冊成功率**: 監控成功/失敗比例
+- **清理成功率**: 監控清理機制的有效性
+- **響應時間**: 監控註冊 API 的響應時間
+- **錯誤率**: 監控各類錯誤的發生頻率
+
+#### 維護操作
+- **孤兒資料清理**: 定期清理不完整的註冊資料
+- **日誌輪轉**: 管理註冊相關的日誌檔案
+- **效能調優**: 根據監控資料調整資料庫和應用配置
+
+這個註冊系統的設計展現了企業級應用的完整考量，從安全性到可靠性，從效能到可維護性，每個環節都經過深思熟慮，確保系統在各種情況下都能穩定運行。
 
 這個後端架構展現了現代 PHP 應用程式的完整設計，整合了認證、權限控管、資料驗證和安全機制，為前端提供了穩定可靠的 API 服務。
 

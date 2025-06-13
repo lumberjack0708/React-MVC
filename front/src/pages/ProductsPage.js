@@ -1,7 +1,7 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../store/cartSlice';
+import { fetchCartStatistics } from '../store/cartSlice';
 import { getApiUrl, API_CONFIG } from '../config';
 import { useNotification } from '../components/Notification';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -124,6 +124,8 @@ function ProductsPage({ user, isLoggedIn, onLoginRequest }) {
           '已加入購物車', 
           `${product.name} 已成功加入您的購物車！`
         );
+        // 刷新 Redux 購物車統計
+        dispatch(fetchCartStatistics(user.account_id));
       } else {
         notify.error(
           '加入購物車失敗', 

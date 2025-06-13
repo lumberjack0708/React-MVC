@@ -21,8 +21,8 @@ import { ShoppingCartOutlined, HomeOutlined, ShoppingOutlined, UserOutlined, Sho
 // 匯入登入模態框組件
 import LoginModal from './components/LoginModal';
 // 匯入 Redux 相關函數和選擇器
-import { useSelector } from 'react-redux';
-import { selectCartItemCount } from './store/cartSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectCartItemCount, fetchCartStatistics } from './store/cartSlice';
 // 匯入 normalize.css 標準化瀏覽器樣式
 import 'normalize.css'; 
 // 引入新的工具函式
@@ -39,6 +39,7 @@ const { Header, Content } = Layout;
  */
 function AppContent() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const cartItemCount = useSelector(selectCartItemCount);   // 使用 Redux 選擇器獲取購物車商品數量
   const { token } = theme.useToken();
 
@@ -79,6 +80,8 @@ function AppContent() {
           }
           if (response.user) {
             setUser(response.user);
+            // 載入用戶的購物車統計
+            dispatch(fetchCartStatistics(response.user.account_id));
           }
           setIsLoggedIn(true);
         } else {
@@ -99,7 +102,18 @@ function AppContent() {
     };
 
     checkAuth();
-  }, []);
+  }, [dispatch]);
+
+  // 定期刷新購物車統計（每30秒）
+  useEffect(() => {
+    if (!user?.account_id) return;
+
+    const interval = setInterval(() => {
+      dispatch(fetchCartStatistics(user.account_id));
+    }, 30000); // 30秒
+
+    return () => clearInterval(interval);
+  }, [user, dispatch]);
 
   const menuItems = [
     {
@@ -151,6 +165,11 @@ function AppContent() {
     setUser(loginResponse.user);
     setIsLoggedIn(true);
     console.log('登入成功，用戶資料:', loginResponse.user);
+    
+    // 登入成功後立即獲取購物車統計
+    if (loginResponse.user?.account_id) {
+      dispatch(fetchCartStatistics(loginResponse.user.account_id));
+    }
   };
 
   const handleLogout = () => {
@@ -158,6 +177,10 @@ function AppContent() {
     setUser(null);
     setIsLoggedIn(false);
     console.log('用戶已登出');
+    
+    // 登出時清空購物車統計
+    dispatch(fetchCartStatistics(null));
+    
     // 導航到首頁
     navigate('/');
   };

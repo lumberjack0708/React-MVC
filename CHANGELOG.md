@@ -5,6 +5,44 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [3.2.1] - 2025-06-13
+### Enhanced
+- **Redux 與後端 API 完整整合** - 實現統一的購物車狀態管理
+  - 重構 `cartSlice.js` 新增 `fetchCartStatistics` async thunk，直接從後端 API 獲取購物車統計
+  - 升級 Redux Store 架構：新增 `statistics`、`loading`、`error` 狀態管理
+  - 實現智慧選擇器：優先使用後端統計資料，fallback 到本地計算確保穩定性
+  - 新增 `extraReducers` 處理異步操作的完整生命週期（pending/fulfilled/rejected）
+
+### Changed
+- **App.js 購物車徽章重構** - 從 CartBadge 組件改回 Redux 驅動
+  - 恢復 `useSelector(selectCartItemCount)` 使用 Redux 管理購物車數量顯示
+  - 整合 `useDispatch` 在關鍵節點自動刷新購物車統計
+  - 登入成功時立即載入用戶購物車統計資料
+  - 登出時自動清空購物車統計，避免數據洩露
+  - 新增定期刷新機制：每30秒自動從後端同步最新購物車數據
+
+### Fixed
+- **購物車數量同步問題** - 解決徽章不顯示實際數量的問題
+  - 修正 `HomePage.js` 和 `ProductsPage.js` 加入購物車成功後立即刷新 Redux 統計
+  - 修正 `CartPage.js` 所有購物車操作（數量修改、商品移除、清空購物車、結帳）後自動刷新 Redux
+  - 確保所有購物車相關操作都會觸發徽章即時更新
+  - 修正跨頁面購物車狀態同步問題
+
+### Technical
+- **異步狀態管理優化** - 完整的 loading 和錯誤處理機制
+  - 實現 Redux Toolkit 的 `createAsyncThunk` 最佳實踐
+  - 新增購物車統計載入狀態指示器
+  - 建立完整的錯誤處理和回退機制
+  - 統一所有購物車操作的狀態管理流程
+
+### Architecture
+- **混合式狀態管理策略** - 結合 Redux 全域管理與 API 驅動設計
+  - Redux 負責購物車徽章的全域狀態管理和跨組件同步
+  - CartService 負責具體的 API 操作和業務邏輯處理
+  - 實現最佳的用戶體驗：即時 UI 更新 + 後端數據準確性保證
+  - 建立可擴展的狀態管理模式，支援未來功能擴展
+
+
 ## [3.2.0] - 2025-06-13
 ### Added
 - **完整使用者註冊系統** - 實現企業級前後端註冊功能

@@ -1,5 +1,7 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { fetchCartStatistics } from '../store/cartSlice';
 import { useNotification } from '../components/Notification';
 import { getApiUrl } from '../config';
 import cartService from '../services/cartService';
@@ -46,6 +48,7 @@ function CartPage({ user }) {
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   
+  const dispatch = useDispatch();
   const { notify } = useNotification();
   const navigate = useNavigate();
   const token = getToken();
@@ -152,6 +155,8 @@ function CartPage({ user }) {
       
       if (response.data.status === 200) {
         message.success('數量已更新');
+        // 刷新 Redux 購物車統計
+        dispatch(fetchCartStatistics(user.account_id));
         // 成功後不需要重新載入，UI已經更新
       } else {
         // 失敗時回滾到原始狀態
@@ -185,6 +190,8 @@ function CartPage({ user }) {
       
       if (response.data.status === 200) {
         message.success('商品已移除');
+        // 刷新 Redux 購物車統計
+        dispatch(fetchCartStatistics(user.account_id));
         // 成功後不需要重新載入，UI已經更新
       } else {
         // 失敗時回滾到原始狀態
@@ -220,6 +227,8 @@ function CartPage({ user }) {
       
       if (response.data.status === 200) {
         message.success('購物車已清空');
+        // 刷新 Redux 購物車統計
+        dispatch(fetchCartStatistics(user.account_id));
         // 成功後不需要重新載入，UI已經更新
       } else {
         // 失敗時回滾到原始狀態
@@ -262,6 +271,7 @@ function CartPage({ user }) {
     try {
       const response = await Request().post(
         getApiUrl('newOrder'),
+        // 將資料轉換為字串格式，並指定陣列的格式化方法為brackets
         Qs.stringify(orderData, { arrayFormat: 'brackets' })
       );
       
@@ -284,6 +294,9 @@ function CartPage({ user }) {
         
         // 背景清空後端購物車
         cartService.clearCart(user.account_id).catch(console.error);
+        
+        // 刷新 Redux 購物車統計
+        dispatch(fetchCartStatistics(user.account_id));
       } else {
         notify.error('訂單失敗', response.data.message || '建立訂單失敗，請稍後再試。');
       }

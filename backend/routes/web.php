@@ -20,13 +20,13 @@ $router->register(action: 'updateUser', class: 'Account', method: 'updateUser');
 
 // 訂單管理相關路由
 $router->register(action: 'getOrders', class: 'Order', method: 'getOrders');
-$router->register(action: 'getOrder', class: 'Order', method: 'getOrder');
+$router->register(action: 'getOrder', class: 'Order', method: 'getOrder'); 
 $router->register(action: 'getOrderStatistics', class: 'Order', method: 'getOrderStatistics');      # 顧客端：獲取該帳號的訂單統計資料
 $router->register(action: 'newOrder', class: 'Order', method: 'newOrder');
-$router->register(action: 'removeOrder', class: 'Order', method: 'removeOrder');
-$router->register(action: 'updateOrder', class: 'Order', method: 'updateOrder');
+$router->register(action: 'removeOrder', class: 'Order', method: 'removeOrder');    # 取消訂單(會回滾)
+$router->register(action: 'updateOrder', class: 'Order', method: 'updateOrder'); //沒在用
 $router->register(action: 'getOrderDetail', class: 'Order', method: 'getOrderDetail');
-$router->register(action: 'updateOrderStatus', class: 'Order', method: 'updateOrderStatus');    # 更新訂單狀態
+$router->register(action: 'updateOrderStatus', class: 'Order', method: 'updateOrderStatus');    # 更新訂單狀態(會回滾)
 
 // 購物車相關路由
 $router->register(action: 'getCart', class: 'Cart', method: 'getCart');

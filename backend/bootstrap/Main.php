@@ -21,8 +21,8 @@ class Main{
 
         
 
-        // 如果是 getProducts 動作，直接執行路由
-        if($action == "getProducts") {
+        // 如果是公開 API，直接執行路由（不需要 token 驗證）
+        if($action == "getProducts" || $action == "newUser") {
             $router = new Router();
             require_once __DIR__ . "/../routes/web.php";
             $response = $router->run($action);

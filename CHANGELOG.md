@@ -5,6 +5,10 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [3.2.2] - 2025-06-14
+### Improved
+- 優化移除產品的錯誤處理，原先的產品移除時只有簡單的錯誤驗證；但在遇到需要刪除訂單有使用到的索引商品時會出現無法刪除的情況發生，因此在這個版本新增了後端邏輯還有前端useContext來顯示這部分的邏輯
+
 ## [3.2.1] - 2025-06-13
 ### Enhanced
 - **Redux 與後端 API 完整整合** - 實現統一的購物車狀態管理

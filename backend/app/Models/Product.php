@@ -57,6 +57,44 @@
         }
         
         public function removeProduct($pid){
+            // 檢查商品是否存在
+            $checkProductSql = "SELECT COUNT(*) AS count FROM `product` WHERE `product_id` = ?";
+            $checkProductResult = DB::select($checkProductSql, array($pid));
+            
+            if ($checkProductResult['status'] !== 200) {
+                return array('status' => 500, 'message' => '資料庫查詢錯誤');
+            }
+            
+            if ($checkProductResult['result'][0]['count'] === 0) {
+                return array('status' => 404, 'message' => '商品不存在');
+            }
+            
+            // 檢查商品是否被訂單引用
+            $checkOrderSql = "SELECT COUNT(*) AS count FROM `order_detail` WHERE `product_id` = ?";
+            $checkOrderResult = DB::select($checkOrderSql, array($pid));
+            
+            if ($checkOrderResult['status'] !== 200) {
+                return array('status' => 500, 'message' => '資料庫查詢錯誤');
+            }
+            
+            if ($checkOrderResult['result'][0]['count'] > 0) {
+                return array('status' => 409, 'message' => '無法刪除商品，該商品已被訂單引用');
+            }
+            
+            // 檢查商品是否在購物車中被引用
+            $checkCartSql = "SELECT COUNT(*) AS count FROM `cart_items` WHERE `product_id` = ?";
+            $checkCartResult = DB::select($checkCartSql, array($pid));
+            
+            if ($checkCartResult['status'] !== 200) {
+                return array('status' => 500, 'message' => '資料庫查詢錯誤');
+            }
+            
+            if ($checkCartResult['result'][0]['count'] > 0) {
+                // 購物車項目會因為 ON DELETE CASCADE 自動刪除，所以這裡只是提醒
+                // 可以選擇警告或直接繼續刪除
+            }
+            
+            // 執行刪除
             $sql = "DELETE FROM `product` WHERE product_id=?";
             return DB::delete($sql, array($pid));
         }

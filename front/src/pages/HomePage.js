@@ -42,8 +42,8 @@ function HomePage({ user, isLoggedIn, onLoginRequest }) {
     const fetchProducts = async () => {
       try {
         const response = await Request().post(getApiUrl('getProducts'), Qs.stringify({}));
-        // 只取前 8 項作為特色商品
-        setProducts(response.data.result.slice(0, 8) || []);
+        // 只取前 X 項作為特色商品(slice(0, x))
+        setProducts(response.data.result.slice(0, 5) || []);
       } catch (error) {
         console.error("無法獲取特色商品:", error);
       } finally {

@@ -1,10 +1,11 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, notification, Modal, Form, Popconfirm, message } from 'antd';
+import { Table, Button, Space, Typography, Modal, Form, Popconfirm, message } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
 import { getProductImage } from '../../assets/images'; // 匯入獲取圖片的函數
 import ProductForm from '../../components/ProductForm'; // 匯入表單組件
 import Request from '../../utils/Request';
+import { useNotification } from '../../components/Notification'; // 匯入自定義通知系統
 // 移除未使用的圖示匯入
 
 const { Title } = Typography;
@@ -15,6 +16,7 @@ const ProductManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null); // 用於判斷是新增還是編輯
   const [form] = Form.useForm();
+  const { notify } = useNotification(); // 使用自定義通知系統
 
   // 獲取商品列表
   const fetchProducts = async () => {
@@ -24,10 +26,7 @@ const ProductManagement = () => {
       const response = await Request().get(url);
       setProducts(response.data.result);
     } catch (error) {
-      notification.error({
-        message: '請求錯誤',
-        description: '無法連接到伺服器，請檢查您的網路連線。',
-      });
+      notify.error('請求錯誤', '無法連接到伺服器，請檢查您的網路連線。');
     } finally {
       setLoading(false);
     }
@@ -91,20 +90,17 @@ const ProductManagement = () => {
       });
       
       if (response.data.status === 200) {
-        message.success(`商品${editingProduct ? '更新' : '新增'}成功`);
+        notify.success('操作成功', `商品${editingProduct ? '更新' : '新增'}成功`);
         handleCancel();
         fetchProducts();
       } else {
-        notification.error({
-          message: editingProduct ? '更新失敗' : '新增失敗',
-          description: response.data.message || '操作失敗，請稍後再試。',
-        });
+        notify.error(
+          editingProduct ? '更新失敗' : '新增失敗', 
+          response.data.message || '操作失敗，請稍後再試。'
+        );
       }
     } catch (error) {
-      notification.error({
-        message: '請求錯誤',
-        description: '無法連接到伺服器，請檢查您的網路連線。',
-      });
+      notify.error('請求錯誤', '無法連接到伺服器，請檢查您的網路連線。');
     }
   };
 
@@ -114,19 +110,20 @@ const ProductManagement = () => {
     try {
       const response = await Request().post(url, Qs.stringify(data));
       if (response.data.status === 200) {
-        message.success('商品刪除成功');
+        notify.success('刪除成功', '商品已成功刪除');
         fetchProducts();
       } else {
-        notification.error({
-          message: '刪除失敗',
-          description: response.data.message || '無法刪除商品，請稍後再試。',
-        });
+        // 根據不同的錯誤狀態碼顯示不同類型的通知
+        if (response.data.status === 409) {
+          notify.warning('無法刪除商品', response.data.message || '該商品已被訂單引用，無法刪除');
+        } else if (response.data.status === 404) {
+          notify.error('商品不存在', response.data.message || '找不到要刪除的商品');
+        } else {
+          notify.error('刪除失敗', response.data.message || '無法刪除商品，請稍後再試。');
+        }
       }
     } catch (error) {
-      notification.error({
-        message: '請求錯誤',
-        description: '無法連接到伺服器。',
-      });
+      notify.error('請求錯誤', '無法連接到伺服器，請檢查您的網路連線。');
     }
   };
 

@@ -5,6 +5,11 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [3.2.3] - 2025-06-15
+這個版本和前一個版本沒有任何不同，但我想到了一個todo；另外就是這個版本為了從桌機改到筆電run，因此重新執行了composer install
+### todo
+- 產品的移除可以改用「下架狀態（Discontinue）」取代，在Product資料表新增 `p_status` 欄位用來管理商品狀態，購買過的商品仍然在訂單顯示，但是商城內只會顯示狀態為【上架中】的商品
+
 ## [3.2.2] - 2025-06-14
 ### Improved
 - 優化移除產品的錯誤處理，原先的產品移除時只有簡單的錯誤驗證；但在遇到需要刪除訂單有使用到的索引商品時會出現無法刪除的情況發生，因此在這個版本新增了後端邏輯還有前端useContext來顯示這部分的邏輯

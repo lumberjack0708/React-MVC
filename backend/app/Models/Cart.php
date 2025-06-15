@@ -22,10 +22,16 @@ class Cart {
             $insertResult = DB::insert($insertSql, array($accountId));
             
             if ($insertResult['status'] === 200) {
+                // 取得剛剛新增的購物車id，沒東西就放null
                 $cartId = isset($insertResult['insert_id']) ? $insertResult['insert_id'] : null;
                 if ($cartId === null) {
                     // 如果無法獲取 insert_id，嘗試查詢剛才插入的記錄
-                    $findSql = "SELECT cart_id FROM shopping_cart WHERE account_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1";
+                    $findSql = "SELECT cart_id 
+                                FROM shopping_cart 
+                                WHERE account_id = ? 
+                                AND status = 'active' 
+                                ORDER BY created_at DESC 
+                                LIMIT 1";
                     $findResult = DB::select($findSql, array($accountId));
                     if ($findResult['status'] === 200 && count($findResult['result']) > 0) {
                         $cartId = $findResult['result'][0]['cart_id'];
@@ -48,7 +54,10 @@ class Cart {
     
     // 驗證商品是否存在且有足夠庫存
     private function validateProduct($productId, $requestedQuantity) {
-        $sql = "SELECT product_id, name, price, stock FROM product WHERE product_id = ?";
+        $sql = "SELECT product_id, name, price, stock 
+                FROM product 
+                WHERE product_id = ? 
+                AND p_status = 'active'";
         $result = DB::select($sql, array($productId));
         
         if ($result['status'] !== 200 || count($result['result']) === 0) {
@@ -75,7 +84,7 @@ class Cart {
     
     // 獲取用戶購物車詳細資訊
     public function getUserCart($accountId) {
-        // 先確保用戶有活躍購物車
+        // 先確保用戶有活躍購物車，沒有就建一個給他
         $cartResult = $this->getOrCreateActiveCart($accountId);
         if ($cartResult['status'] !== 200) {
             return $cartResult;
@@ -83,7 +92,7 @@ class Cart {
         
         $cartId = $cartResult['cart_id'];
         
-        // 使用 JOIN 查詢購物車詳細資訊
+        // 購物車詳細資訊
         $sql = "SELECT 
                     shopping_cart.cart_id,
                     cart_items.cart_item_id,
@@ -97,6 +106,7 @@ class Cart {
                     (cart_items.quantity * cart_items.unit_price) AS item_total,
                     cart_items.added_at,
                     cart_items.updated_at,
+                    -- 價格有變動的商品
                     (product.price != cart_items.unit_price) AS price_changed
                 FROM shopping_cart
                 JOIN cart_items ON shopping_cart.cart_id = cart_items.cart_id
@@ -266,9 +276,9 @@ class Cart {
     public function removeFromCart($accountId, $cartItemId) {
         // 1. 驗證購物車項目是否屬於該用戶
         $verifySql = "SELECT cart_items.cart_item_id 
-                      FROM cart_items 
-                      JOIN shopping_cart ON cart_items.cart_id = shopping_cart.cart_id 
-                      WHERE cart_items.cart_item_id = ? AND shopping_cart.account_id = ? AND shopping_cart.status = 'active'";
+                        FROM cart_items 
+                        JOIN shopping_cart ON cart_items.cart_id = shopping_cart.cart_id 
+                        WHERE cart_items.cart_item_id = ? AND shopping_cart.account_id = ? AND shopping_cart.status = 'active'";
         
         $verifyResult = DB::select($verifySql, array($cartItemId, $accountId));
         
@@ -365,15 +375,6 @@ class Cart {
         }
         
         return $result;
-    }
-    
-    
-    // 購物車轉訂單
-    public function convertCartToOrder($accountId) {
-        // 這個方法可以在訂單創建時調用(暫時還沒用到)
-        // 將購物車狀態改為 'converted'
-        $updateSql = "UPDATE shopping_cart SET status = 'converted' WHERE account_id = ? AND status = 'active'";
-        return DB::update($updateSql, array($accountId));
     }
 }
 ?> 

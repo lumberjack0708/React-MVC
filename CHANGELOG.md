@@ -5,6 +5,11 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [3.2.4] - 2025-06-15
+### added
+- 這個版本把上個版本的todo填上了，新增了`getAllProducts`這支API，店家可以查詢所有商品，而顧客端只會查詢 `p_state='active'` 的商品，並新增了這支API的權限僅為admin擁有
+- 在前端顯示與更改畫面添加 `p_state` 顯示，並設置`width`參數為10%
+
 ## [3.2.3] - 2025-06-15
 這個版本和前一個版本沒有任何不同，但我想到了一個todo；另外就是這個版本為了從桌機改到筆電run，因此重新執行了composer install
 ### todo

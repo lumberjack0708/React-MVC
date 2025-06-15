@@ -24,6 +24,10 @@ class Product extends Controller
     public function getProduct(){
         return $this->getProducts();
     }
+
+    public function getAllProducts(){
+        return $this->pm->getAllProducts();
+    }
     
     public function newProduct(){
         $p_name = $_POST['p_name'];
@@ -31,6 +35,7 @@ class Product extends Controller
         $stock = $_POST['stock'];
         $category = $_POST['category'];
         $imageUrl = null;
+        $p_status = isset($_POST['p_status']) ? $_POST['p_status'] : 'active';
 
         // 處理圖片上傳
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -43,7 +48,7 @@ class Product extends Controller
             }
         }
 
-        return $this->pm->newProduct($p_name, $price, $stock, $category, $imageUrl);
+        return $this->pm->newProduct($p_name, $price, $stock, $category, $imageUrl, $p_status);
     }
     
     public function removeProduct(){
@@ -58,6 +63,7 @@ class Product extends Controller
         $stock = $_POST['stock'];
         $category = $_POST['category'];
         $imageUrl = null;
+        $p_status = isset($_POST['p_status']) ? $_POST['p_status'] : 'active';
 
         // 處理圖片上傳
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -70,7 +76,7 @@ class Product extends Controller
             }
         }
 
-        return $this->pm->updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl);
+        return $this->pm->updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl, $p_status);
     }
 }
 ?>

@@ -90,5 +90,4 @@ class CartService {
   }
 }
 
-// 導出單例實例
 export default new CartService(); 

@@ -100,6 +100,7 @@ class Cart extends Controller
         return $this->cm->clearCart($accountId);
     }
     
+    // 取得購物車統計資料
     public function getCartStatistics(){
         // 驗證必要參數
         if (!isset($_POST['account_id']) || empty($_POST['account_id'])) {

@@ -17,18 +17,27 @@
         }
         
         public function getProducts(){
-            $sql = "SELECT  *  FROM  `product`";
+            // 只取得上架中的商品
+            $sql = "SELECT  *  FROM  `product` WHERE `p_status` = 'active'";
+            $arg = NULL;
+            return DB::select($sql, $arg);
+        }
+
+        public function getAllProducts(){
+            // 管理員: 取得所有商品(包含下架)
+            $sql = "SELECT  *  
+                    FROM  `product` ";
             $arg = NULL;
             return DB::select($sql, $arg);
         }
         
         public function getProduct($pid){
-            $sql = "SELECT  *  FROM  `product` WHERE `product_id`=?";
+            $sql = "SELECT  *  FROM  `product` WHERE `product_id`=? AND `p_status` = 'active'";
             $arg = array($pid);
             return DB::select($sql, $arg);
         }
         
-        public function newProduct($p_name, $price, $stock, $category, $imageUrl){
+        public function newProduct($p_name, $price, $stock, $category, $imageUrl, $p_status){
             // 檢查必填欄位
             if(empty($p_name)) {
                 return array('status' => 400, 'message' => "產品名稱不可為空");
@@ -52,8 +61,8 @@
             }
             
             // 如果不存在同名產品，則進行新增
-            $sql = "INSERT INTO `product` (`name`, `price`, `stock`, `category`, `image_url`) VALUES (?, ?, ?, ?, ?)";
-            return DB::insert($sql, array($p_name, $price, $stock, $category, $imageUrl));
+            $sql = "INSERT INTO `product` (`name`, `price`, `stock`, `category`, `image_url`, `p_status`) VALUES (?, ?, ?, ?, ?, ?)";
+            return DB::insert($sql, array($p_name, $price, $stock, $category, $imageUrl, $p_status));
         }
         
         public function removeProduct($pid){
@@ -90,8 +99,7 @@
             }
             
             if ($checkCartResult['result'][0]['count'] > 0) {
-                // 購物車項目會因為 ON DELETE CASCADE 自動刪除，所以這裡只是提醒
-                // 可以選擇警告或直接繼續刪除
+                return array('status' => 409, 'message' => '無法刪除商品，該商品已被購物車引用');
             }
             
             // 執行刪除
@@ -99,7 +107,7 @@
             return DB::delete($sql, array($pid));
         }
         
-        public function updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl){
+        public function updateProduct($pid, $p_name, $price, $stock, $category, $imageUrl, $p_status){
             // 檢查必填欄位
             if(empty($p_name)) {
                 return array('status' => 400, 'message' => "產品名稱不可為空");
@@ -125,12 +133,12 @@
             // 根據是否有新的 imageUrl 來決定 SQL 語句
             if ($imageUrl !== null) {
                 // 如果有新圖片，則更新 image_url 欄位
-                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=?, `image_url`=? WHERE `product_id`=?";
-                $params = array($p_name, $price, $stock, $category, $imageUrl, $pid);
+                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=?, `image_url`=?, `p_status`=? WHERE `product_id`=?";
+                $params = array($p_name, $price, $stock, $category, $imageUrl, $p_status, $pid);
             } else {
                 // 如果沒有新圖片，則不更新 image_url 欄位
-                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=? WHERE `product_id`=?";
-                $params = array($p_name, $price, $stock, $category, $pid);
+                $sql = "UPDATE `product` SET `name`=?, `price`=?, `stock`=?, `category`=?, `p_status`=? WHERE `product_id`=?";
+                $params = array($p_name, $price, $stock, $category, $p_status, $pid);
             }
             
             // 如果通過所有檢查，則進行更新

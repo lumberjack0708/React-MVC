@@ -15,6 +15,7 @@ const ProductForm = ({ form, initialValues }) => {
         price: parseInt(initialValues.price, 10),
         stock: initialValues.stock,
         category: initialValues.category,
+        p_status: initialValues.p_status || 'active',
         image: initialValues.image_url ? [{
           uid: '-1',
           name: initialValues.image_url.split('/').pop(),
@@ -66,6 +67,17 @@ const ProductForm = ({ form, initialValues }) => {
           <Option value="food">食品</Option>
           <Option value="toy">玩具</Option>
           <Option value="accessories">配件</Option>
+        </Select>
+      </Form.Item>
+      <Form.Item
+        name="p_status"
+        label="商品狀態"
+        rules={[{ required: true, message: '請選擇商品狀態！' }]}
+        initialValue="active"
+      >
+        <Select placeholder="請選擇商品狀態">
+          <Option value="active">上架</Option>
+          <Option value="removed">下架</Option>
         </Select>
       </Form.Item>
       <Form.Item

@@ -1,6 +1,7 @@
 <?php
 // 產品相關路由
-$router->register(action: 'getProducts', class: 'Product',method: 'getProducts');
+$router->register(action: 'getProducts', class: 'Product',method: 'getProducts');           // 顧客端：只取得上架中的商品
+$router->register(action: 'getAllProducts', class: 'Product',method: 'getAllProducts');     // 管理員：取得所有商品(包含下架)
 $router->register(action: 'newProduct', class: 'Product', method: 'newProduct');
 $router->register(action: 'removeProduct', class: 'Product', method: 'removeProduct');
 $router->register(action: 'updateProduct', class: 'Product', method: 'updateProduct');

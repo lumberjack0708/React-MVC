@@ -1,6 +1,6 @@
 /* global Qs */
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, Modal, Form, Popconfirm, message } from 'antd';
+import { Table, Button, Space, Typography, Modal, Form, Popconfirm, message, Tag } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
 import { getProductImage } from '../../assets/images'; // 匯入獲取圖片的函數
 import ProductForm from '../../components/ProductForm'; // 匯入表單組件
@@ -21,7 +21,7 @@ const ProductManagement = () => {
   // 獲取商品列表
   const fetchProducts = async () => {
     setLoading(true);
-    const url = getApiUrl('getProducts');
+    const url = getApiUrl('getAllProducts');
     try {
       const response = await Request().get(url);
       setProducts(response.data.result);
@@ -48,6 +48,7 @@ const ProductManagement = () => {
     form.setFieldsValue({
       ...record,
       price: parseInt(record.price, 10), // 確保價格是數字
+      p_status: record.p_status || 'active', // 確保狀態欄位有值
     });
     setIsModalVisible(true);
   };
@@ -154,6 +155,17 @@ const ProductManagement = () => {
       title: '庫存',
       dataIndex: 'stock',
       key: 'stock',
+    },
+    {
+      title: '商品狀態',
+      dataIndex: 'p_status',
+      key: 'p_status',
+      width: '10%',
+      render: (status) => {
+        const color = status === 'active' ? 'green' : 'red';
+        const text = status === 'active' ? '上架' : '下架';
+        return <Tag color={color}>{text}</Tag>;
+      },
     },
     {
       title: '操作',

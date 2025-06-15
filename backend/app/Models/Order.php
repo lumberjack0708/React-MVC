@@ -3,7 +3,7 @@
     use Vendor\DB;
 
     class Order{
-        // 加入權限控管 - 完全照ProductModel的模式
+        // 加入權限控管
         public function getRoles($id){
             $sql = "SELECT role_id FROM user_role WHERE account_id = ?";
             $arg = array($id);
@@ -115,23 +115,23 @@
             // 實際購買金額（排除已取消訂單）
             $totalAmountSql = "SELECT 
                                 COALESCE(SUM(od.quantity * p.price), 0) AS total_amount
-                               FROM orders o
-                               JOIN order_detail od ON o.order_id = od.order_id
-                               JOIN product p ON od.product_id = p.product_id
-                               WHERE o.account_id = ? AND o.status != 'cancelled'";
+                                FROM orders o
+                                JOIN order_detail od ON o.order_id = od.order_id
+                                JOIN product p ON od.product_id = p.product_id
+                                WHERE o.account_id = ? AND o.status != 'cancelled'";
             $totalAmountResult = DB::select($totalAmountSql, array($account_id));
             $totalAmount = $totalAmountResult['result'][0]['total_amount'] ?? 0;
             
             // 購買商品種類數（排除已取消訂單）
             $totalItemsSql = "SELECT 
-                               COALESCE(SUM(item_count), 0) AS total_items
-                              FROM (
+                                COALESCE(SUM(item_count), 0) AS total_items
+                                FROM (
                                 SELECT COUNT(od.product_id) AS item_count
                                 FROM orders o
                                 JOIN order_detail od ON o.order_id = od.order_id
                                 WHERE o.account_id = ? AND o.status != 'cancelled'
                                 GROUP BY o.order_id
-                              ) AS order_items";
+                                ) AS order_items";
             $totalItemsResult = DB::select($totalItemsSql, array($account_id));
             $totalItems = $totalItemsResult['result'][0]['total_items'] ?? 0;
             
@@ -156,15 +156,14 @@
             if (!is_array($products_id)) {
                 $products_id = array($products_id);
             }
-            
             if (!is_array($quantity)) {
                 $quantity = array($quantity);
             }
             
             try {
-                // 先檢查所有產品庫存是否足夠
+                // 先檢查所有產品庫存是否足夠，且商品狀態為上架(保險起見還是再做一次)
                 for ($i = 0; $i < count($products_id); $i++) {
-                    $checkStockSql = "SELECT `stock`, `name` FROM `product` WHERE `product_id` = ?";
+                    $checkStockSql = "SELECT `stock`, `name` FROM `product` WHERE `product_id` = ? AND `p_status` = 'active'";
                     $checkStockResult = DB::select($checkStockSql, array($products_id[$i]));
                     
                     // 檢查產品是否存在
@@ -229,27 +228,23 @@
         }
         
         public function removeOrder($order_id, $account_id){
-            // 添加調試資訊
-            error_log("Order Model removeOrder 開始 - order_id: " . $order_id . ", account_id: " . $account_id);
-            
-            // 1. 訂單存在性檢查
+            // 1. 先確認訂單是否存在
             $orderSql = "SELECT * FROM `orders` WHERE `order_id` = ?";
             $orderResult = DB::select($orderSql, array($order_id));
 
             if ($orderResult['status'] != 200 || empty($orderResult['result'])) {
-                error_log("訂單不存在：" . $order_id);
                 return array('status' => 404, 'message' => "找不到訂單編號：" . $order_id);
             }
             $order = $orderResult['result'][0];
             error_log("訂單資料：" . json_encode($order));
 
-            // 2. 訂單狀態檢查
+            // 2. 確認訂單狀態，已出貨跟已取消的訂單不能取消
             if (in_array($order['status'], ['shipped', 'cancelled'])) {
                 error_log("訂單狀態不允許取消：" . $order['status']);
                 return array('status' => 400, 'message' => "無法取消狀態為「" . $order['status'] . "」的訂單");
             }
 
-            // 3. 權限檢查
+            // 3. 只有admin跟訂單擁有者可以刪除訂單
             $accountSql = "SELECT `role_id` FROM `account` WHERE `account_id` = ?";
             $accountResult = DB::select($accountSql, array($account_id));
             
@@ -265,11 +260,7 @@
             $is_admin = ($userRole == 1); //  role_id = 1 是管理員
             $is_owner = ($order['account_id'] == $account_id);
             
-            error_log("權限檢查 - userRole: " . $userRole . ", is_admin: " . ($is_admin ? 'true' : 'false') . ", is_owner: " . ($is_owner ? 'true' : 'false'));
-            error_log("訂單擁有者ID：" . $order['account_id'] . ", 當前操作者ID：" . $account_id);
-
             if (!$is_admin && !$is_owner) {
-                error_log("權限不足 - 既不是管理員也不是訂單擁有者");
                 return array('status' => 403, 'message' => "權限不足，無法取消此訂單");
             }
             
@@ -318,7 +309,7 @@
                 return array('status' => 404, 'message' => "找不到訂單編號：" . $orderId);
             }
             
-            // 檢查狀態值是否有效 (假設有效狀態為：pending(待處理), processing(處理中), shipped(已出貨), cancelled(已取消))
+            // 檢查狀態值是否有效 (有效狀態為：pending(待處理), processing(處理中), shipped(已出貨), cancelled(已取消))
             $validStatus = array('pending', 'processing', 'shipped', 'cancelled');
             if (!in_array($status, $validStatus)) {
                 return array('status' => 400, 'message' => "無效的訂單狀態，有效狀態為：pending, processing, shipped, cancelled");

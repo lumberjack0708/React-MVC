@@ -294,7 +294,6 @@ function CartPage({ user }) {
         
         // 背景清空後端購物車
         cartService.clearCart(user.account_id).catch(console.error);
-        
         // 刷新 Redux 購物車統計
         dispatch(fetchCartStatistics(user.account_id));
         

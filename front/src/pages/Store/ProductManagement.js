@@ -1,6 +1,6 @@
 /* global Qs */
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Typography, Modal, Form, Popconfirm, message, Tag } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Table, Button, Space, Typography, Modal, Form, Popconfirm, Tag } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
 import { getProductImage } from '../../assets/images'; // 匯入獲取圖片的函數
 import ProductForm from '../../components/ProductForm'; // 匯入表單組件
@@ -19,7 +19,7 @@ const ProductManagement = () => {
   const { notify } = useNotification(); // 使用自定義通知系統
 
   // 獲取商品列表
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     const url = getApiUrl('getAllProducts');
     try {
@@ -30,12 +30,12 @@ const ProductManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   // 在組件首次渲染時獲取數據
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
   const handleAdd = () => {
     setEditingProduct(null); // 清除編輯狀態

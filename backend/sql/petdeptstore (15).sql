@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2025-06-12 19:06:21
+-- 產生時間： 2025-06-15 11:28:55
 -- 伺服器版本： 10.4.32-MariaDB
 -- PHP 版本： 8.2.12
 
@@ -50,7 +50,9 @@ INSERT INTO `account` (`account_id`, `account_code`, `role_id`, `email`, `passwo
 (5, 'C004', 2, 'david@petdept.com', 'david123', 'David Chen', '台南市東區崇學路45號', '2000-07-12'),
 (6, 'C005', 2, 'eva@petdept.com', 'eva123', 'Eva Wang', '高雄市三民區民族一路100號', '2003-11-20'),
 (7, 'C006', 2, 'frank@petdept.com', 'frank123', 'Frank Ho', '新竹市東區關新路68號', '1998-05-30'),
-(8, 'C007', 2, 'grace@petdept.com', 'grace123', 'Grace Liu', '桃園市中壢區中華路二段87號', '2001-09-15');
+(8, 'C007', 2, 'grace@petdept.com', 'grace123', 'Grace Liu', '桃園市中壢區中華路二段87號', '2001-09-15'),
+(13, '1234567890', 2, '1@gmail.com', '123456', '123', '', '0000-00-00'),
+(14, 'testuser', 2, 'testuser@gmail.com', 'testuser', 'testuser', 'No. 58, Shenzhong Road', '1899-11-30');
 
 -- --------------------------------------------------------
 
@@ -91,7 +93,8 @@ INSERT INTO `action` (`id`, `name`) VALUES
 (21, 'updateCartItem'),
 (22, 'removeFromCart'),
 (23, 'clearCart'),
-(24, 'getCartStatistics');
+(24, 'getCartStatistics'),
+(25, 'getAllProducts');
 
 -- --------------------------------------------------------
 
@@ -114,16 +117,16 @@ CREATE TABLE `cart_items` (
 --
 
 INSERT INTO `cart_items` (`cart_item_id`, `cart_id`, `product_id`, `quantity`, `added_at`, `updated_at`, `unit_price`) VALUES
-(1, 1, 1, 2, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 350.00),
-(2, 1, 3, 1, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 450.00),
-(3, 1, 8, 3, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 90.00),
 (4, 2, 2, 1, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 120.00),
 (5, 2, 6, 2, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 200.00),
 (6, 2, 10, 1, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 250.00),
 (7, 3, 9, 1, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 1990.00),
 (8, 3, 12, 1, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 1680.00),
 (9, 3, 11, 2, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 180.00),
-(10, 1, 5, 3, '2025-06-13 01:05:38', '2025-06-13 01:05:38', 600.00);
+(29, 1, 2, 2, '2025-06-13 22:07:03', '2025-06-13 22:07:04', 120.00),
+(30, 1, 3, 1, '2025-06-13 22:07:05', '2025-06-13 22:07:05', 450.00),
+(31, 1, 1, 1, '2025-06-13 22:19:40', '2025-06-13 22:19:40', 350.00),
+(32, 1, 11, 1, '2025-06-13 22:19:44', '2025-06-13 22:19:44', 180.00);
 
 --
 -- 觸發器 `cart_items`
@@ -193,7 +196,17 @@ INSERT INTO `orders` (`order_id`, `account_id`, `order_time`, `status`) VALUES
 (22, 2, '2025-06-10 16:19:43', 'shipped'),
 (23, 1, '2025-06-10 18:16:03', 'cancelled'),
 (24, 2, '2025-06-10 18:58:36', 'shipped'),
-(25, 2, '2025-06-10 19:10:03', 'shipped');
+(25, 2, '2025-06-10 19:10:03', 'shipped'),
+(26, 2, '2025-06-13 01:30:53', 'pending'),
+(27, 2, '2025-06-13 01:48:39', 'shipped'),
+(28, 1, '2025-06-13 01:53:41', 'pending'),
+(29, 1, '2025-06-13 16:41:36', 'pending'),
+(30, 13, '2025-06-13 20:30:43', 'cancelled'),
+(31, 1, '2025-06-14 03:07:02', 'pending'),
+(32, 1, '2025-06-14 03:10:39', 'pending'),
+(33, 14, '2025-06-14 14:25:42', 'pending'),
+(34, 1, '2025-06-15 14:13:32', 'pending'),
+(35, 1, '2025-06-15 14:48:41', 'cancelled');
 
 -- --------------------------------------------------------
 
@@ -254,7 +267,27 @@ INSERT INTO `order_detail` (`order_id`, `product_id`, `quantity`) VALUES
 (22, 2, 1),
 (23, 2, 1),
 (24, 6, 3),
-(25, 2, 4);
+(25, 2, 4),
+(26, 2, 2),
+(26, 5, 2),
+(26, 8, 8),
+(27, 10, 1),
+(27, 14, 2),
+(28, 25, 5),
+(29, 9, 1),
+(29, 25, 1),
+(30, 3, 1),
+(30, 25, 1),
+(31, 2, 1),
+(31, 3, 1),
+(31, 4, 1),
+(32, 25, 1),
+(33, 18, 1),
+(33, 20, 2),
+(34, 6, 1),
+(34, 12, 1),
+(34, 20, 1),
+(35, 2, 1);
 
 -- --------------------------------------------------------
 
@@ -268,35 +301,36 @@ CREATE TABLE `product` (
   `price` decimal(10,2) NOT NULL COMMENT '售價',
   `stock` int(11) NOT NULL COMMENT '存貨量',
   `category` varchar(50) NOT NULL COMMENT '商品類別',
-  `image_url` varchar(255) DEFAULT NULL
+  `image_url` varchar(255) DEFAULT NULL,
+  `p_status` varchar(20) NOT NULL DEFAULT 'active' COMMENT '產品狀態(active、removed)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='商品資訊表';
 
 --
 -- 傾印資料表的資料 `product`
 --
 
-INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`, `image_url`) VALUES
-(1, '犬用飼料 2kg', 350.00, 44, 'food', NULL),
-(2, '貓抓板', 120.00, 27, 'toy', NULL),
-(3, '寵物睡墊', 450.00, 26, 'accessories', NULL),
-(4, '鳥用水樽', 80.00, 45, 'accessories', NULL),
-(5, '貓砂盆 附蓋', 600.00, 21, 'accessories', NULL),
-(6, '狗狗潔牙骨(10入)', 200.00, 58, 'food', NULL),
-(7, '小動物跑輪', 300.00, 24, 'toy', NULL),
-(8, '貓咪零食 - 鮪魚條', 90.00, 79, 'food', NULL),
-(9, '智能餵食器', 1990.00, 15, 'accessories', NULL),
-(10, '犬用牽繩 (紅色)', 250.00, 34, 'accessories', NULL),
-(11, '寵物洗毛精 500ml', 180.00, 40, 'accessories', NULL),
-(12, '貓跳台 四層', 1680.00, 10, 'accessories', NULL),
-(13, '狗狗雨衣 (M號)', 420.00, 20, 'accessories', NULL),
-(14, '寵物提籃 (小型犬/貓)', 750.00, 13, 'accessories', NULL),
-(15, '兔子飼料 1.5kg', 320.00, 18, 'food', NULL),
-(16, '狗狗玩具 - 發聲球', 150.00, 48, 'toy', NULL),
-(17, '貓用逗貓棒', 90.00, 70, 'toy', NULL),
-(18, '倉鼠木屑 (無塵)', 110.00, 39, 'accessories', NULL),
-(19, '水龜濾水器', 1350.00, 16, 'accessories', NULL),
-(20, '鳥飼料混合包 1kg', 160.00, 28, 'food', NULL),
-(25, '逐鹿燒肉套餐', 690.00, 60, 'food', 'uploads/products/6848100a8492c-IMG_2700.JPEG');
+INSERT INTO `product` (`product_id`, `name`, `price`, `stock`, `category`, `image_url`, `p_status`) VALUES
+(1, '犬用飼料 2kg', 350.00, 44, 'food', NULL, 'active'),
+(2, '貓抓板', 120.00, 24, 'toy', NULL, 'active'),
+(3, '寵物睡墊', 450.00, 25, 'accessories', NULL, 'active'),
+(4, '鳥用水樽', 80.00, 44, 'accessories', NULL, 'active'),
+(5, '貓砂盆 附蓋', 600.00, 19, 'accessories', NULL, 'active'),
+(6, '狗狗潔牙骨(10入)', 200.00, 57, 'food', NULL, 'active'),
+(7, '小動物跑輪', 300.00, 24, 'toy', NULL, 'active'),
+(8, '貓咪零食 - 鮪魚條', 90.00, 71, 'food', NULL, 'active'),
+(9, '智能餵食器', 1990.00, 14, 'accessories', NULL, 'active'),
+(10, '犬用牽繩 (紅色)', 250.00, 33, 'accessories', NULL, 'active'),
+(11, '寵物洗毛精 500ml', 180.00, 40, 'accessories', NULL, 'active'),
+(12, '貓跳台 四層', 1680.00, 0, 'accessories', NULL, 'active'),
+(14, '寵物提籃 (小型犬/貓)', 750.00, 11, 'accessories', NULL, 'active'),
+(15, '兔子飼料 1.5kg', 320.00, 18, 'food', NULL, 'active'),
+(16, '狗狗玩具 - 發聲球', 150.00, 48, 'toy', NULL, 'active'),
+(17, '貓用逗貓棒', 90.00, 70, 'toy', NULL, 'active'),
+(18, '倉鼠木屑 (無塵)', 110.00, 38, 'accessories', NULL, 'active'),
+(19, '水龜濾水器', 1350.00, 16, 'accessories', NULL, 'active'),
+(20, '鳥飼料混合包 1kg', 160.00, 25, 'food', NULL, 'active'),
+(25, '逐鹿燒肉套餐', 599.00, 49, 'food', 'uploads/products/6848100a8492c-IMG_2700.JPEG', 'removed'),
+(28, '準備要下架的商品', 60.00, 3, 'accessories', 'uploads/products/684e651dc3397-lovepik-lotus-lotus-leaves-picture_501730105.jpg', 'active');
 
 -- --------------------------------------------------------
 
@@ -374,7 +408,8 @@ INSERT INTO `role_action` (`id`, `role_id`, `action_id`) VALUES
 (41, 1, 21),
 (42, 1, 22),
 (43, 1, 23),
-(44, 1, 24);
+(44, 1, 24),
+(45, 1, 25);
 
 -- --------------------------------------------------------
 
@@ -395,10 +430,12 @@ CREATE TABLE `shopping_cart` (
 --
 
 INSERT INTO `shopping_cart` (`cart_id`, `account_id`, `created_at`, `updated_at`, `status`) VALUES
-(1, 2, '2025-06-13 00:38:39', '2025-06-13 01:05:38', 'active'),
+(1, 2, '2025-06-13 00:38:39', '2025-06-13 22:19:44', 'active'),
 (2, 3, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 'active'),
 (3, 4, '2025-06-13 00:38:39', '2025-06-13 00:38:39', 'active'),
-(4, 1, '2025-06-13 00:56:12', '2025-06-13 00:56:12', 'active');
+(4, 1, '2025-06-13 00:56:12', '2025-06-15 14:48:41', 'active'),
+(9, 13, '2025-06-13 20:28:21', '2025-06-13 20:30:43', 'active'),
+(10, 14, '2025-06-14 14:24:15', '2025-06-14 14:25:42', 'active');
 
 -- --------------------------------------------------------
 
@@ -425,7 +462,9 @@ INSERT INTO `user_role` (`id`, `account_id`, `role_id`) VALUES
 (6, 5, 2),
 (7, 6, 2),
 (8, 7, 2),
-(9, 8, 2);
+(9, 8, 2),
+(14, 13, 2),
+(15, 14, 2);
 
 --
 -- 已傾印資料表的索引
@@ -516,13 +555,13 @@ ALTER TABLE `user_role`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `account`
 --
 ALTER TABLE `account`
-  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `account_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `action`
 --
 ALTER TABLE `action`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `cart_items`
@@ -534,13 +573,13 @@ ALTER TABLE `cart_items`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=26;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '整數型自動遞增主鍵', AUTO_INCREMENT=36;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `product`
 --
 ALTER TABLE `product`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '商品編號', AUTO_INCREMENT=26;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '商品編號', AUTO_INCREMENT=29;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `role`
@@ -552,19 +591,19 @@ ALTER TABLE `role`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `role_action`
 --
 ALTER TABLE `role_action`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `shopping_cart`
 --
 ALTER TABLE `shopping_cart`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '購物車編號 (主鍵)', AUTO_INCREMENT=5;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '購物車編號 (主鍵)', AUTO_INCREMENT=11;
 
 --
 -- 使用資料表自動遞增(AUTO_INCREMENT) `user_role`
 --
 ALTER TABLE `user_role`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- 已傾印資料表的限制式

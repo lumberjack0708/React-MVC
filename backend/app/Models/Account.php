@@ -3,7 +3,7 @@ namespace Models;
 use Vendor\DB;
 
 class Account {
-    // 加入權限控管 - 完全照ProductModel的模式
+    // 加入權限控管
     public function getRoles($id){
         $sql = "SELECT role_id FROM user_role WHERE account_id = ?";
         $arg = array($id);

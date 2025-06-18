@@ -39,6 +39,12 @@ class AuthMiddleware extends Controller{
             $response = $om->getRoles($id);
             $user_roles = $response['result'];
         }
+        // 購物車相關的actions
+        elseif (in_array($action, ['getCart', 'addToCart', 'removeFromCart', 'updateCartItem', 'clearCart', 'getCartStatistics'])) {
+            $cm = new \Models\Cart();
+            $response = $cm->getRoles($id);
+            $user_roles = $response['result'];
+        }
         // 預設使用ProductModel（照原本的模式）
         else {
             $pm = new ProductModel();

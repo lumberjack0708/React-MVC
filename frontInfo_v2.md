@@ -1453,4 +1453,231 @@ v3.2.1 版本展現了一種新的前端架構模式：
 └─────────────────────────────────────────┘
 ```
 
-這種模式結合了各種狀態管理方案的優勢，為不同的使用場景選擇最適合的解決方案，實現了理想的開發體驗和用戶體驗平衡。 
+這種模式結合了各種狀態管理方案的優勢，為不同的使用場景選擇最適合的解決方案，實現了理想的開發體驗和用戶體驗平衡。
+
+## 分頁系統優化指南 (Pagination System Optimization Guide)
+
+### 背景與挑戰
+
+在管理員界面的開發過程中，我們遇到了兩個主要的分頁相關問題：
+1. **表格內容過多導致分頁器被遮擋** - 需要滾動才能看到分頁控制
+2. **分頁器位置不固定** - 隨著資料筆數變化而上下移動，影響用戶體驗
+
+為了解決這些問題，我們實施了一套完整的分頁優化方案。
+
+### 分頁顯示優化 (Pagination Display Optimization)
+
+#### 問題描述
+在管理員界面中，商品管理和訂單管理的表格內容過多，導致分頁器（換頁列）被遮擋，需要滾動才能看到。
+
+#### 解決方案
+
+##### 1. 調整分頁大小
+減少每頁顯示的資料數量，確保在固定高度的容器中能完整顯示表格和分頁器。
+
+**商品管理優化**:
+- **原設定**: `pageSize: 5`
+- **新設定**: `pageSize: 3`
+- **選項**: `['3', '5', '8']`
+
+**訂單管理優化**:
+- **原設定**: `pageSize: 5`
+- **新設定**: `pageSize: 9` (後續調整為適合的數值)
+- **選項**: `['5', '10', '20']`
+
+##### 2. 優化容器結構
+使用 Flexbox 布局確保表格能夠正確適應容器高度。
+
+```javascript
+// 容器結構改進
+<div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+  {/* 標題區域 - 固定高度 */}
+  <div style={{ flexShrink: 0 }}>
+    {/* 標題和按鈕 */}
+  </div>
+  
+  {/* 表格區域 - 彈性高度 */}
+  <div style={{ flex: 1, overflow: 'hidden' }}>
+    <Table scroll={{ y: 'calc(100vh - 320px)' }} />
+  </div>
+</div>
+```
+
+##### 3. 表格滾動設定
+添加垂直滾動設定，確保表格內容在超出容器時能夠正確滾動。
+
+**滾動配置**:
+- **商品管理**: `scroll={{ y: 'calc(100vh - 300px)' }}`
+- **訂單管理**: `scroll={{ x: 1000, y: 'calc(100vh - 300px)' }}`
+
+##### 4. 分頁器位置優化
+將分頁器固定在底部右側，確保始終可見。
+
+```javascript
+pagination={{
+  position: ['bottomCenter'],
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆`,
+  showSizeChanger: true
+}}
+```
+
+#### 技術細節
+
+**AdminLayout 優化**:
+- 減少內邊距：`padding: '16px'` → 更緊湊的布局
+- 使用 Flexbox：確保內容區域正確擴展
+- 固定高度：`height: '100vh'` 防止無意義滾動
+
+**響應式考量**:
+- 使用 `calc()` 動態計算滾動高度
+- 保持分頁器的響應式功能
+- 支援不同螢幕尺寸
+
+### 固定分頁器位置優化 (Fixed Pagination Position)
+
+#### 問題描述
+原本的表格分頁器會隨著資料筆數的變化而上下移動，造成用戶體驗不一致。當資料較少時，分頁器位置較高；資料較多時，分頁器位置較低。
+
+#### 解決方案
+
+##### 核心概念
+將表格和分頁器完全分離，使用獨立的 Pagination 組件，並固定在容器底部。
+
+##### 技術實現
+
+**1. 結構重設計**
+```javascript
+<div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+  {/* 標題區域 - 固定高度 */}
+  <Title style={{ flexShrink: 0 }}>標題</Title>
+  
+  {/* 主要內容區域 - 彈性高度 */}
+  <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    
+    {/* 表格區域 - 彈性高度 */}
+    <div style={{ flex: 1, overflow: 'hidden' }}>
+      <Table pagination={false} />
+    </div>
+    
+    {/* 分頁器區域 - 固定高度 */}
+    <div style={{ 
+        flexShrink: 0, 
+        padding: '16px 24px 16px 0', 
+        borderTop: '1px solid #f0f0f0',
+        backgroundColor: '#fafafa',
+        display: 'flex',
+        justifyContent: 'flex-end'
+    }}>
+      <Pagination />
+    </div>
+    
+  </div>
+</div>
+```
+
+**2. 狀態管理**
+添加分頁相關的狀態：
+```javascript
+const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(5);
+
+// 計算當前頁要顯示的資料
+const paginatedData = useMemo(() => {
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  return allData.slice(startIndex, endIndex);
+}, [allData, currentPage, pageSize]);
+```
+
+**3. 表格配置**
+```javascript
+<Table 
+  dataSource={paginatedData}  // 使用分頁後的資料
+  pagination={false}          // 禁用內建分頁器
+  scroll={{ y: 'calc(100vh - 300px)' }}  // 固定表格高度
+/>
+```
+
+**4. 獨立分頁器**
+```javascript
+<Pagination
+  current={currentPage}
+  pageSize={pageSize}
+  total={allData.length}      // 使用總資料數量
+  showSizeChanger
+  pageSizeOptions={['5', '10', '20']}
+  showTotal={(total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆`}
+  onChange={(page, size) => {
+    setCurrentPage(page);
+    setPageSize(size);
+  }}
+  onShowSizeChange={(current, size) => {
+    setCurrentPage(1);
+    setPageSize(size);
+  }}
+/>
+```
+
+#### 修改詳情
+
+**商品管理 (ProductManagement.js)**:
+- 添加 `currentPage`, `pageSize` 狀態
+- 創建 `paginatedProducts` 計算屬性
+- 禁用表格內建分頁器：`pagination={false}`
+- 在底部添加獨立的 `Pagination` 組件
+- 調整表格滾動高度：`y: 'calc(100vh - 300px)'`
+
+**訂單管理 (OrderManagement.js)**:
+- 添加 `currentPage`, `pageSize` 狀態  
+- 創建 `paginatedOrders` 計算屬性
+- 禁用表格內建分頁器：`pagination={false}`
+- 在底部添加獨立的 `Pagination` 組件
+- 調整表格滾動高度：`y: 'calc(100vh - 300px)'`
+- 初始 pageSize 設定為 9，提供更多資料顯示
+
+#### 樣式設計
+
+**分頁器容器樣式**:
+```javascript
+{
+  padding: '16px 24px 16px 0', // 上下內邊距，右側額外間距
+  borderTop: '1px solid #f0f0f0',  // 頂部邊框分隔
+  backgroundColor: '#fafafa',   // 淺灰背景
+  display: 'flex',
+  justifyContent: 'flex-end',  // 右對齊
+  flexShrink: 0               // 防止縮小
+}
+```
+
+### 優化效果總結
+
+**分頁顯示優化效果**:
+✅ **分頁器始終可見** - 不再需要滾動查看  
+✅ **更好的空間利用** - 緊湊但清晰的布局  
+✅ **提升用戶體驗** - 操作更加直觀  
+✅ **保持功能完整** - 所有原有功能正常工作  
+
+**固定分頁器位置效果**:
+✅ **位置固定** - 分頁器始終在底部，不受資料數量影響  
+✅ **視覺穩定** - 用戶界面更加一致和可預測  
+✅ **操作便利** - 分頁控制始終可見，無需滾動尋找  
+✅ **空間利用** - 表格區域最大化利用可用空間  
+✅ **響應式** - 支援不同螢幕尺寸下的正確顯示  
+
+### 技術注意事項
+
+1. **資料更新時重置分頁**: 在 `fetchData` 時設定 `setCurrentPage(1)`
+2. **高度計算**: 根據實際布局調整 `calc()` 中的數值
+3. **分頁器選項**: 根據實際需求調整 `pageSizeOptions`
+4. **記憶體優化**: 使用 `useMemo` 避免不必要的重新計算
+
+### 未來改進建議
+
+1. **響應式優化**: 根據螢幕大小動態調整 pageSize
+2. **虛擬滾動**: 對於大量資料可考慮使用虛擬滾動
+3. **表格高度自適應**: 更精確的高度計算
+4. **載入狀態優化**: 改善載入時的視覺反饋
+5. **URL同步**: 將分頁狀態同步到 URL 參數
+6. **鍵盤導航**: 支援鍵盤快捷鍵操作分頁
+
+這套分頁優化方案不僅解決了當前的顯示問題，更為未來的功能擴展奠定了良好的基礎，展現了對用戶體驗細節的關注和對代碼品質的追求。 

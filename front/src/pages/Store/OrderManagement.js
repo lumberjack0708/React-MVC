@@ -1,6 +1,6 @@
 /* global Qs */
-import React, { useState, useEffect } from 'react';
-import { Table, Tag, Space, Typography, notification, Select, Button, Modal, message, Popconfirm, Tooltip } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Table, Tag, Space, Typography, notification, Select, Button, Modal, message, Popconfirm, Tooltip, Pagination } from 'antd';
 import { EyeOutlined, CloseCircleOutlined, EditOutlined } from '@ant-design/icons';
 import { getApiUrl, API_CONFIG } from '../../config';
 import Request from '../../utils/Request';
@@ -16,6 +16,15 @@ const OrderManagement = () => {
   const [currentOrderDetails, setCurrentOrderDetails] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
+
+  // 計算當前頁要顯示的資料
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return orders.slice(startIndex, endIndex);
+  }, [orders, currentPage, pageSize]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -23,6 +32,7 @@ const OrderManagement = () => {
     try {
       const response = await Request().get(url);
       setOrders(response.data.result || []);
+      setCurrentPage(1); // 重置到第一頁
     } catch (error) {
       notification.error({
         message: '請求錯誤',
@@ -312,21 +322,47 @@ const OrderManagement = () => {
   ];
 
   return (
-    <div>
-      <Title level={2}>訂單管理</Title>
-      <Table 
-        columns={columns} 
-        dataSource={orders} 
-        rowKey="訂單編號" 
-        loading={loading}
-        pagination={{ 
-          pageSize: 10,
-          showSizeChanger: true,
-          showTotal: (total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆訂單`
-        }}
-        scroll={{ x: 1000 }}
-        size="middle"
-      />
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Title level={2} style={{ margin: '0 0 16px 0', flexShrink: 0 }}>訂單管理</Title>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <Table 
+            columns={columns} 
+            dataSource={paginatedOrders} 
+            rowKey="訂單編號" 
+            loading={loading}
+            pagination={false} // 禁用表格自帶的分頁器
+            scroll={{ x: 1000, y: 'calc(100vh - 300px)' }}
+            size="middle"
+          />
+        </div>
+        <div style={{ 
+            padding: '16px 24px 16px 0', 
+            borderTop: '1px solid #f0f0f0', 
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            flexShrink: 0
+        }}>
+
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={orders.length}
+          showSizeChanger
+          pageSizeOptions={['5', '10', '20']}
+          showTotal={(total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆訂單`}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          onShowSizeChange={(current, size) => {
+            setCurrentPage(1);
+            setPageSize(size);
+          }}
+          />
+        </div>
+      </div>
       <Modal
         title={`訂單 #${currentOrderDetails[0]?.['訂單編號']} 詳細內容`}
         open={isDetailModalVisible}

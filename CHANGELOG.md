@@ -5,6 +5,14 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)，
 並且專案遵循語義化版本控制 ([Semantic Versioning](https://semver.org/spec/v2.0.0.html))。
 
+## [3.5.0] - 2025-06-19
+### changed
+- 修正了原本admin身分可以看到【一般身分】購物頁面的問題，在這個版本中當 `role_id === 1` 時會顯示完全不同的畫面並重新導航到 `/admin/products`；使其更符合實際的電商網站邏輯
+
+### improved
+- 優化原先admin介面會有無異議滾動的問題，適當的調整了`AdminLayout`、訂單管理與商品管理的 table  `padding` 參數，讓無意義滾動的問題被解決
+- 將分頁器從AntDesign Table中獨立，從根源上避免因資料筆數不同導致分頁器跟著上下跑的問題
+
 ## [3.4.0] - 2025-06-18
 ### changed
 - 這個版本修正了過去幾個版本嚴重的框架問題，將所有 `Model` 層中的商業邏輯都移到 `Controller`

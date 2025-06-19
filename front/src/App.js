@@ -13,6 +13,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import StoreLayout from './pages/Store/StoreLayout';
 import ProductManagement from './pages/Store/ProductManagement';
 import OrderManagement from './pages/Store/OrderManagement';
+// 匯入管理員專用布局
+import AdminLayout from './pages/Store/AdminLayout';
 // 匯入通知相關的 Provider
 import { NotificationProvider } from './components/Notification';
 // 匯入 Ant Design 元件
@@ -80,8 +82,10 @@ function AppContent() {
           }
           if (response.user) {
             setUser(response.user);
-            // 載入用戶的購物車統計
-            dispatch(fetchCartStatistics(response.user.account_id));
+            // 只有非管理員用戶才載入購物車統計
+            if (response.user.role_id !== 1) {
+              dispatch(fetchCartStatistics(response.user.account_id));
+            }
           }
           setIsLoggedIn(true);
         } else {
@@ -104,9 +108,9 @@ function AppContent() {
     checkAuth();
   }, [dispatch]);
 
-  // 定期刷新購物車統計（每30秒）
+  // 定期刷新購物車統計（每30秒）- 僅對非管理員用戶
   useEffect(() => {
-    if (!user?.account_id) return;
+    if (!user?.account_id || user?.role_id === 1) return;
 
     const interval = setInterval(() => {
       dispatch(fetchCartStatistics(user.account_id));
@@ -166,9 +170,14 @@ function AppContent() {
     setIsLoggedIn(true);
     console.log('登入成功，用戶資料:', loginResponse.user);
     
-    // 登入成功後立即獲取購物車統計
-    if (loginResponse.user?.account_id) {
-      dispatch(fetchCartStatistics(loginResponse.user.account_id));
+    // 登入成功後，如果是管理員，直接跳轉到管理界面
+    if (loginResponse.user?.role_id === 1) {
+      navigate('/admin/products');
+    } else {
+      // 普通用戶立即獲取購物車統計
+      if (loginResponse.user?.account_id) {
+        dispatch(fetchCartStatistics(loginResponse.user.account_id));
+      }
     }
   };
 
@@ -190,8 +199,36 @@ function AppContent() {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>正在載入...</div>;
   }
 
+  // 如果用戶是管理員 (role_id === 1)，顯示專門的管理界面
+  if (isLoggedIn && user?.role_id === 1) {
+    // 如果管理員訪問非管理路徑，自動重定向
+    const currentPath = window.location.pathname;
+    if (!currentPath.startsWith('/admin')) {
+      navigate('/admin/products', { replace: true });
+      return null;
+    }
+
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminLayout user={user} onLogout={handleLogout} />}>
+          <Route index element={<ProductManagement />} />
+          <Route path="products" element={<ProductManagement />} />
+          <Route path="orders" element={<OrderManagement />} />
+        </Route>
+        {/* 處理其他路徑 */}
+        <Route path="*" element={<AdminLayout user={user} onLogout={handleLogout} />}>
+          <Route index element={<ProductManagement />} />
+        </Route>
+      </Routes>
+    );
+  }
+
+  // 普通用戶界面
   return (
-    <Layout className="layout" style={{ minHeight: '100vh' }}>
+    <Layout className="layout" style={{ 
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
       <Header style={{
         position: 'sticky',
         top: 0,
@@ -201,7 +238,9 @@ function AppContent() {
         padding: '0 50px',
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        height: '64px',
+        flexShrink: 0
       }}>
         <div 
           className="logo" 
@@ -266,17 +305,6 @@ function AppContent() {
                   style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
                 />
               </Dropdown>
-              
-              {/* 只有管理員 (role_id === 1) 才能看到店家管理按鈕 */}
-              {user?.role_id === 1 && (
-                <Button 
-                  type="primary" 
-                  shape="circle" 
-                  icon={<ShopOutlined />}
-                  onClick={handleStoreIconClick}
-                  title="店家管理"
-                />
-              )}
             </>
           ) : (
             <>
@@ -295,29 +323,28 @@ function AppContent() {
                 onClick={handleUserIconClick}
                 title="用戶資訊"
               />
-              
-              {/* 未登入時也不顯示店家管理按鈕 */}
             </>
           )}
         </div>
       </Header>
-      <Content style={{ padding: '0 50px', marginTop: '16px' }}>
-        <div className="site-content" style={{ minHeight: 280, padding: 24, background: token.colorBgContainer, borderRadius: '4px' }}>
+      <Content style={{ 
+        padding: '0 50px', 
+        marginTop: '16px',
+        height: 'calc(100vh - 80px)',
+        overflow: 'auto'
+      }}>
+        <div className="site-content" style={{ 
+          minHeight: '100%', 
+          padding: 24, 
+          background: token.colorBgContainer, 
+          borderRadius: '4px'
+        }}>
           <Routes>
             <Route path="/" element={<HomePage user={user} isLoggedIn={isLoggedIn} onLoginRequest={handleLoginClick} />} />
             <Route path="/products" element={<ProductsPage user={user} isLoggedIn={isLoggedIn} onLoginRequest={handleLoginClick} />} />
             <Route path="/purchase-history" element={<PurchaseHistoryPage user={user} />} />
             <Route path="/cart" element={<CartPage user={user} />} />
             <Route path="/user-profile" element={<UserProfilePage user={user} />} />
-            
-            {/* 只有管理員才能訪問店家管理 */}
-            {user?.role_id === 1 && (
-              <Route path="/store" element={<StoreLayout />}>
-                <Route path="products" element={<ProductManagement />} />
-                <Route path="orders" element={<OrderManagement />} />
-              </Route>
-            )}
-            
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

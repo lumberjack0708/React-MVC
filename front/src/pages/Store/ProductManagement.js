@@ -1,6 +1,6 @@
 /* global Qs */
-import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Space, Typography, Modal, Form, Popconfirm, Tag } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Table, Button, Space, Typography, Modal, Form, Popconfirm, Tag, Pagination } from 'antd';
 import { getApiUrl, API_CONFIG } from '../../config';
 import { getProductImage } from '../../assets/images'; // 匯入獲取圖片的函數
 import ProductForm from '../../components/ProductForm'; // 匯入表單組件
@@ -15,8 +15,17 @@ const ProductManagement = () => {
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null); // 用於判斷是新增還是編輯
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [form] = Form.useForm();
   const { notify } = useNotification(); // 使用自定義通知系統
+
+  // 計算當前頁要顯示的資料
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return products.slice(startIndex, endIndex);
+  }, [products, currentPage, pageSize]);
 
   // 獲取商品列表
   const fetchProducts = useCallback(async () => {
@@ -25,6 +34,7 @@ const ProductManagement = () => {
     try {
       const response = await Request().get(url);
       setProducts(response.data.result);
+      setCurrentPage(1); // 重置到第一頁
     } catch (error) {
       notify.error('請求錯誤', '無法連接到伺服器，請檢查您的網路連線。');
     } finally {
@@ -187,20 +197,51 @@ const ProductManagement = () => {
   ];
 
   return (
-    <div>
-      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between', flexShrink: 0 }}>
         <Title level={2} style={{ margin: 0 }}>商品管理</Title>
         <Button type="primary" onClick={handleAdd}>
           新增商品
         </Button>
       </Space>
-      <Table 
-        columns={columns} 
-        dataSource={products} 
-        rowKey="product_id" // 使用資料庫中的主鍵 'product_id'
-        loading={loading}
-        pagination={{ pageSize: 5 }}
-      />
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <Table 
+            columns={columns} 
+            dataSource={paginatedProducts} 
+            rowKey="product_id" // 使用資料庫中的主鍵 'product_id'
+            loading={loading}
+            pagination={false} // 禁用表格自帶的分頁器
+            size="middle"
+            scroll={{ y: 'calc(100vh - 300px)' }} // 設定表格高度
+          />
+        </div>
+        <div style={{ 
+          padding: '16px 24px 16px 0', 
+          borderTop: '1px solid #f0f0f0', 
+          backgroundColor: '#fafafa',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          flexShrink: 0
+        }}>
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={products.length}
+            showSizeChanger
+            pageSizeOptions={['5', '10', '20']}
+            showTotal={(total, range) => `第 ${range[0]}-${range[1]} 筆，共 ${total} 筆商品`}
+            onChange={(page, size) => {
+              setCurrentPage(page);
+              setPageSize(size);
+            }}
+            onShowSizeChange={(current, size) => {
+              setCurrentPage(1);
+              setPageSize(size);
+            }}
+          />
+        </div>
+      </div>
       <Modal
         title={editingProduct ? '編輯商品' : '新增商品'}
         open={isModalVisible}

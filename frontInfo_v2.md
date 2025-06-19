@@ -356,6 +356,15 @@ flowchart TB
   - **`HomePage.js`**: `navigate('/products')` - 點擊按鈕後導航到商品頁面。
   - **`CartPage.js`**: `navigate('/purchase-history')` - 結帳成功後導航到購買紀錄頁面。
 
+- **`useMemo`** - **分頁計算效能優化** (v3.5.0 新增):
+  - **`OrderManagement.js`**: `const paginatedOrders = useMemo(() => { ... }, [orders, currentPage, pageSize])` 
+    - **功能**: 計算當前頁面應該顯示的訂單資料，避免每次重新渲染時都執行 `slice()` 操作
+    - **計算邏輯**: 根據 `currentPage` 和 `pageSize` 計算起始索引 `(currentPage - 1) * pageSize`，然後使用 `orders.slice(startIndex, endIndex)` 切取對應範圍的資料
+    - **依賴陣列**: `[orders, currentPage, pageSize]` - 僅在完整訂單列表、當前頁碼或頁面大小改變時重新計算
+    - **效能優勢**: 對於大量訂單資料，避免不必要的陣列切片操作，特別是在頻繁翻頁或調整頁面大小時顯著提升性能
+  - **`ProductManagement.js`**: 同樣模式用於 `paginatedProducts` 計算
+    - **使用場景**: 當管理員管理大量商品時，分頁計算優化確保頁面切換的流暢性
+
 - **`useDispatch` / `useSelector`** (from React Redux - **v3.2.1 重新整合**):
   - **`useDispatch`**:
     - **`App.js`**: `dispatch(fetchCartStatistics(user.account_id))` - 登入/登出時更新購物車統計
@@ -1297,7 +1306,7 @@ const handleAsyncOperation = async () => {
 ### 前端效能技術
 1. **React.memo**: 防止不必要的重新渲染
 2. **useCallback**: 穩定化事件處理函數
-3. **useMemo**: 複雜計算結果快取
+3. **useMemo**: 複雜計算結果快取，特別在管理員界面用於分頁資料計算優化
 4. **Code Splitting**: React.lazy + Suspense (未來規劃)
 
 ### 網路請求最佳化
@@ -1581,13 +1590,19 @@ pagination={{
 const [currentPage, setCurrentPage] = useState(1);
 const [pageSize, setPageSize] = useState(5);
 
-// 計算當前頁要顯示的資料
+// 使用 useMemo 計算當前頁要顯示的資料 - 效能優化關鍵
 const paginatedData = useMemo(() => {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   return allData.slice(startIndex, endIndex);
 }, [allData, currentPage, pageSize]);
 ```
+
+**useMemo 效能優化詳解**:
+- **為什麼使用 useMemo**: 在訂單/商品資料量大時，每次元件重新渲染都執行 `slice()` 操作會影響效能
+- **依賴陣列設計**: `[allData, currentPage, pageSize]` 確保只有在這三個值變化時才重新計算
+- **實際效益**: 在翻頁、調整頁面大小或資料更新時才重新計算，避免不必要的陣列處理
+- **記憶體使用**: 快取計算結果，在相同參數下直接返回之前的結果，提升性能
 
 **3. 表格配置**
 ```javascript
@@ -1669,7 +1684,11 @@ const paginatedData = useMemo(() => {
 1. **資料更新時重置分頁**: 在 `fetchData` 時設定 `setCurrentPage(1)`
 2. **高度計算**: 根據實際布局調整 `calc()` 中的數值
 3. **分頁器選項**: 根據實際需求調整 `pageSizeOptions`
-4. **記憶體優化**: 使用 `useMemo` 避免不必要的重新計算
+4. **useMemo 記憶體優化**: 
+   - **正確的依賴陣列**: 確保 `[orders, currentPage, pageSize]` 包含所有影響計算結果的變數
+   - **避免過度優化**: 對於小量資料（< 100 筆）useMemo 的效能提升可能不明顯
+   - **記憶體權衡**: useMemo 會儲存計算結果，需要在效能和記憶體使用間取得平衡
+   - **除錯提示**: 在開發模式下可以使用 `console.log` 在 useMemo 內部驗證重新計算的時機
 
 ### 未來改進建議
 

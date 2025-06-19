@@ -10,7 +10,7 @@
 - 修正了原本admin身分可以看到【一般身分】購物頁面的問題，在這個版本中當 `role_id === 1` 時會顯示完全不同的畫面並重新導航到 `/admin/products`；使其更符合實際的電商網站邏輯
 
 ### improved
-- 優化原先admin介面會有無異議滾動的問題，適當的調整了`AdminLayout`、訂單管理與商品管理的 table  `padding` 參數，讓無意義滾動的問題被解決
+- 優化原先admin介面會有無意義滾動的問題，適當的調整了`AdminLayout`、訂單管理與商品管理的 table  `padding` 參數，讓無意義滾動的問題被解決
 - 將分頁器從AntDesign Table中獨立，從根源上避免因資料筆數不同導致分頁器跟著上下跑的問題
 - **分頁性能優化** - 在訂單管理和商品管理中實現 `useMemo` 優化分頁計算
   - 新增 `paginatedOrders` 和 `paginatedProducts` 計算屬性，避免每次重新渲染時都重新執行 `slice()` 操作

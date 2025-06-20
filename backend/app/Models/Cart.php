@@ -118,10 +118,40 @@ class Cart {
     }
     
     
-    // 刪除購物車項目
-    public function deleteCartItem($cartItemId) {
-        $sql = "DELETE FROM cart_items WHERE cart_item_id = ?";
-        return DB::delete($sql, array($cartItemId));
+    // 移除購物車商品
+    public function removeFromCart($accountId, $cartItemId) {
+        // 1. 驗證購物車項目是否屬於該用戶
+        $verifySql = "SELECT cart_items.cart_item_id 
+                        FROM cart_items 
+                        JOIN shopping_cart ON cart_items.cart_id = shopping_cart.cart_id 
+                        WHERE cart_items.cart_item_id = ? 
+                            AND shopping_cart.account_id = ? 
+                            AND shopping_cart.status = 'active'";
+        
+        $verifyResult = DB::select($verifySql, array($cartItemId, $accountId));
+        
+        if ($verifyResult['status'] !== 200 || count($verifyResult['result']) === 0) {
+            return array(
+                'status' => 404,
+                'message' => '購物車項目不存在或無權限操作'
+            );
+        }
+        
+        // 2. 刪除項目
+        $deleteSql = "DELETE FROM cart_items WHERE cart_item_id = ?";
+        $deleteResult = DB::delete($deleteSql, array($cartItemId));
+        
+        if ($deleteResult['status'] === 200) {
+            return array(
+                'status' => 200,
+                'message' => '商品已從購物車移除'
+            );
+        } else {
+            return array(
+                'status' => 500,
+                'message' => '移除失敗'
+            );
+        }
     }
     
     
